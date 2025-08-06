@@ -1,0 +1,82 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environment
+battlemap_env/
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Generated outputs
+output/
+generated_images/
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.bmp
+*.tif
+*.tiff
+
+# Test files (keep folder structure but not large images)
+test_images/*.webp
+test_images/*.png  
+test_images/*.jpg
+test_images/*.jpeg
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pytest
+.pytest_cache/
+.coverage
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
