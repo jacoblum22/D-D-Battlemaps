@@ -18,7 +18,11 @@ except ImportError:
     print("Warning: matplotlib not available. Visual display disabled.")
 
 # Add the project root to path so we can import our modules
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+project_root = os.path.dirname(
+    os.path.abspath(__file__)
+)  # Test is at project root level
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 from battlemap_processor.core.grid_detector import GridDetector
 from battlemap_processor.core.boring_detector import BoringTileDetector

@@ -2,10 +2,22 @@
 Tile Extractor for extracting grid-aligned tiles from battlemap images
 """
 
-import numpy as np
-from typing import List, Tuple, Dict, Any
+import logging
+from typing import List, Dict, Any, TypedDict, Union
 from PIL import Image
 from dataclasses import dataclass
+
+# Set up logging
+logger = logging.getLogger(__name__)
+
+
+class GridInfo(TypedDict):
+    """Type definition for grid detection results"""
+
+    nx: int  # Number of columns
+    ny: int  # Number of rows
+    x_edges: List[int]  # X coordinates of grid edges
+    y_edges: List[int]  # Y coordinates of grid edges
 
 
 @dataclass
@@ -27,8 +39,63 @@ class TileExtractor:
     def __init__(self, tile_size: int = 512):
         self.tile_size = tile_size
 
+    def _create_tile_from_grid_coords(
+        self,
+        pil_img: Image.Image,
+        grid_info: Union[GridInfo, Dict[str, Any]],
+        start_grid_x: int,
+        start_grid_y: int,
+        squares_per_tile: int,
+    ) -> TileInfo:
+        """
+        Create a tile from grid coordinates (common logic for both methods)
+
+        Args:
+            pil_img: Source image
+            grid_info: Grid detection results
+            start_grid_x: Starting grid column
+            start_grid_y: Starting grid row
+            squares_per_tile: Number of grid squares per tile
+
+        Returns:
+            TileInfo object with the extracted and resized tile
+        """
+        x_edges = grid_info["x_edges"]
+        y_edges = grid_info["y_edges"]
+
+        end_grid_x = start_grid_x + squares_per_tile
+        end_grid_y = start_grid_y + squares_per_tile
+
+        # Convert to pixel coordinates
+        start_pixel_x = x_edges[start_grid_x]
+        start_pixel_y = y_edges[start_grid_y]
+        end_pixel_x = x_edges[end_grid_x]
+        end_pixel_y = y_edges[end_grid_y]
+
+        # Extract and resize tile
+        tile_crop = pil_img.crop(
+            (start_pixel_x, start_pixel_y, end_pixel_x, end_pixel_y)
+        )
+        tile_resized = tile_crop.resize(
+            (self.tile_size, self.tile_size), Image.Resampling.LANCZOS
+        )
+
+        # Create tile info
+        return TileInfo(
+            image=tile_resized,
+            grid_x=start_grid_x,
+            grid_y=start_grid_y,
+            pixel_x=start_pixel_x,
+            pixel_y=start_pixel_y,
+            squares_wide=squares_per_tile,
+            squares_tall=squares_per_tile,
+        )
+
     def extract_tiles(
-        self, pil_img: Image.Image, grid_info: Dict, squares_per_tile: int = 12
+        self,
+        pil_img: Image.Image,
+        grid_info: Union[GridInfo, Dict[str, Any]],
+        squares_per_tile: int = 12,
     ) -> List[TileInfo]:
         """
         Extract grid-aligned tiles from an image
@@ -43,13 +110,11 @@ class TileExtractor:
         """
         nx_total = grid_info["nx"]
         ny_total = grid_info["ny"]
-        x_edges = grid_info["x_edges"]
-        y_edges = grid_info["y_edges"]
 
         # Check if we can extract any tiles of the requested size
         if nx_total < squares_per_tile or ny_total < squares_per_tile:
-            print(
-                f"  Warning: Grid is {nx_total}x{ny_total}, too small for {squares_per_tile}x{squares_per_tile} tiles"
+            logger.warning(
+                f"Grid is {nx_total}x{ny_total}, too small for {squares_per_tile}x{squares_per_tile} tiles"
             )
             return []
 
@@ -65,6 +130,10 @@ class TileExtractor:
         offset_x = ((remaining_x - (remaining_x & 1)) // 2) if remaining_x > 0 else 0
         offset_y = ((remaining_y - (remaining_y & 1)) // 2) if remaining_y > 0 else 0
 
+        logger.debug(
+            f"Extracting {tiles_x}x{tiles_y} tiles with offset ({offset_x},{offset_y})"
+        )
+
         tiles = []
 
         for row in range(tiles_y):
@@ -72,36 +141,11 @@ class TileExtractor:
                 # Calculate grid coordinates
                 start_grid_x = offset_x + (col * squares_per_tile)
                 start_grid_y = offset_y + (row * squares_per_tile)
-                end_grid_x = start_grid_x + squares_per_tile
-                end_grid_y = start_grid_y + squares_per_tile
 
-                # Convert to pixel coordinates
-                start_pixel_x = x_edges[start_grid_x]
-                start_pixel_y = y_edges[start_grid_y]
-                end_pixel_x = x_edges[end_grid_x]
-                end_pixel_y = y_edges[end_grid_y]
-
-                # Extract the tile
-                tile_crop = pil_img.crop(
-                    (start_pixel_x, start_pixel_y, end_pixel_x, end_pixel_y)
+                # Use helper method for common crop/resize/TileInfo logic
+                tile_info = self._create_tile_from_grid_coords(
+                    pil_img, grid_info, start_grid_x, start_grid_y, squares_per_tile
                 )
-
-                # Resize to target size
-                tile_resized = tile_crop.resize(
-                    (self.tile_size, self.tile_size), Image.Resampling.LANCZOS
-                )
-
-                # Create tile info
-                tile_info = TileInfo(
-                    image=tile_resized,
-                    grid_x=start_grid_x,
-                    grid_y=start_grid_y,
-                    pixel_x=start_pixel_x,
-                    pixel_y=start_pixel_y,
-                    squares_wide=squares_per_tile,
-                    squares_tall=squares_per_tile,
-                )
-
                 tiles.append(tile_info)
 
         return tiles
@@ -109,7 +153,7 @@ class TileExtractor:
     def extract_tiles_with_overlap(
         self,
         pil_img: Image.Image,
-        grid_info: Dict,
+        grid_info: Union[GridInfo, Dict[str, Any]],
         squares_per_tile: int = 12,
         overlap_squares: int = 2,
     ) -> List[TileInfo]:
@@ -146,33 +190,10 @@ class TileExtractor:
 
         for row_idx, start_grid_y in enumerate(grid_y_positions):
             for col_idx, start_grid_x in enumerate(grid_x_positions):
-                end_grid_x = start_grid_x + squares_per_tile
-                end_grid_y = start_grid_y + squares_per_tile
-
-                # Convert to pixel coordinates
-                start_pixel_x = x_edges[start_grid_x]
-                start_pixel_y = y_edges[start_grid_y]
-                end_pixel_x = x_edges[end_grid_x]
-                end_pixel_y = y_edges[end_grid_y]
-
-                # Extract and resize tile
-                tile_crop = pil_img.crop(
-                    (start_pixel_x, start_pixel_y, end_pixel_x, end_pixel_y)
+                # Use helper method for common crop/resize/TileInfo logic
+                tile_info = self._create_tile_from_grid_coords(
+                    pil_img, grid_info, start_grid_x, start_grid_y, squares_per_tile
                 )
-                tile_resized = tile_crop.resize(
-                    (self.tile_size, self.tile_size), Image.Resampling.LANCZOS
-                )
-
-                tile_info = TileInfo(
-                    image=tile_resized,
-                    grid_x=start_grid_x,
-                    grid_y=start_grid_y,
-                    pixel_x=start_pixel_x,
-                    pixel_y=start_pixel_y,
-                    squares_wide=squares_per_tile,
-                    squares_tall=squares_per_tile,
-                )
-
                 tiles.append(tile_info)
 
         return tiles

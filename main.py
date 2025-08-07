@@ -14,7 +14,26 @@ Where source can be:
 import argparse
 import os
 import sys
+from urllib.parse import urlparse
 from battlemap_processor import BattlemapProcessor
+
+
+def _is_google_drive_url(source: str) -> bool:
+    """Check if source is a valid Google Drive URL"""
+    try:
+        parsed = urlparse(source)
+        return parsed.netloc == "drive.google.com" and "/folders/" in parsed.path
+    except Exception:
+        return False
+
+
+def _is_remote_url(source: str) -> bool:
+    """Check if source is a remote URL"""
+    try:
+        parsed = urlparse(source)
+        return parsed.scheme in ("http", "https", "s3", "ftp")
+    except Exception:
+        return False
 
 
 def main():
@@ -41,13 +60,31 @@ def main():
     args = parser.parse_args()
 
     # Validate source
-    if not (os.path.exists(args.source) or "drive.google.com" in args.source):
-        print(f"Error: Source '{args.source}' does not exist")
+    if not (
+        os.path.exists(args.source)
+        or _is_google_drive_url(args.source)
+        or _is_remote_url(args.source)
+    ):
+        print(
+            f"Error: Source '{args.source}' does not exist and is not a valid remote URL"
+        )
         return 1
 
     # Validate parameters
     if args.squares < 8 or args.squares > 20:
         print("Warning: squares per tile should typically be between 8-20")
+
+    # Validate tile size
+    if args.tile_size <= 0:
+        print(f"Error: tile size must be positive, got {args.tile_size}")
+        return 1
+    if args.tile_size > 4096:
+        print(f"Error: tile size too large ({args.tile_size}), maximum is 4096")
+        return 1
+    if args.tile_size < 64:
+        print(
+            f"Warning: tile size ({args.tile_size}) is very small, recommended minimum is 64"
+        )
 
     # Create processor
     print(f"Initializing battlemap processor...")

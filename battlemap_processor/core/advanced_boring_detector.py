@@ -41,7 +41,7 @@ class AdvancedBoringDetector:
 
         # Parameters for gap filling (relaxed criteria for isolated squares)
         self.gap_fill_relaxation_factor = (
-            1.7  # Multiply thresholds by this for gap filling (+50%, was +30%)
+            1.7  # Multiply thresholds by this for gap filling (+70%, was +30%)
         )
         self.max_gap_size = (
             20  # Maximum isolated region size to consider for gap filling (was 3)
@@ -98,15 +98,6 @@ class AdvancedBoringDetector:
                                 f"texture_var={features['texture_variance']:.1f}, "
                                 f"sat={features['mean_saturation']:.1f}"
                             )
-                    elif (
-                        debug and debug_sample_count < 3
-                    ):  # Show some failed squares for debugging
-                        debug_sample_count += 1
-                        print(
-                            f"  Non-uniform square at ({col},{row}) - checking criteria..."
-                        )
-                        # Re-run with debug info
-                        self._is_uniform_square(np.array(square), debug_pos=(col, row))
 
         if debug:
             print(f"  Black squares: {black_count}")

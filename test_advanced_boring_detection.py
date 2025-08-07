@@ -1,13 +1,11 @@
 """
 Test script for Advanced Boring Detection
 
-Tests the new AdvancedBoringDetector that identi    # Define colors for different types of boring squares
-    colors = {
-        'black': [255, 0, 0],                    # Red for black squares
-        'large_uniform_region': [0, 150, 255]   # Blue for large uniform regions
-    }
+Tests the new AdvancedBoringDetector that identifies two types of boring squares:
 1. Individual black squares
 2. Large connected regions of uniform content (water, sky, etc.)
+
+Visualizes the results using matplotlib with color-coded overlays.
 """
 
 import sys
@@ -18,9 +16,12 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from PIL import Image
 
-# Add the project root to path
-project_root = Path(__file__).parent
-sys.path.insert(0, str(project_root))
+# Add the project root to path so we can import our modules
+project_root = os.path.dirname(
+    os.path.abspath(__file__)
+)  # Test is at project root level
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 from battlemap_processor.core.grid_detector import GridDetector
 from battlemap_processor.core.advanced_boring_detector import AdvancedBoringDetector
@@ -91,6 +92,14 @@ def visualize_advanced_boring_detection(img, grid_info, square_analysis, stats):
     nx, ny = grid_info["nx"], grid_info["ny"]
     x_edges = grid_info["x_edges"]
     y_edges = grid_info["y_edges"]
+
+    # Validate edge arrays to prevent bounds errors
+    if len(x_edges) < nx + 1:
+        print(f"❌ Invalid x_edges: expected {nx + 1} edges, got {len(x_edges)}")
+        return
+    if len(y_edges) < ny + 1:
+        print(f"❌ Invalid y_edges: expected {ny + 1} edges, got {len(y_edges)}")
+        return
 
     for x in x_edges:
         ax1.axvline(x, color="white", alpha=0.5, linewidth=0.5)

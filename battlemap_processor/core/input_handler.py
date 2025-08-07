@@ -8,7 +8,7 @@ import re
 import zipfile
 import tempfile
 import shutil
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Generator, Tuple
 from PIL import Image
 
 # Google Drive imports (will be used when we implement GDrive support)
@@ -50,6 +50,29 @@ class InputHandler:
             return self._get_images_from_directory(source)
         elif self._is_image_file(source):
             return self._get_single_image(source)
+        else:
+            raise ValueError(f"Unsupported source type: {source}")
+
+    def stream_images_from_source(
+        self, source: str
+    ) -> Generator[Tuple[str, Image.Image], None, None]:
+        """
+        Stream images from source one at a time (memory efficient)
+
+        Args:
+            source: Google Drive URL or local file path
+
+        Yields:
+            Tuples of (image_name, PIL_Image)
+        """
+        if self._is_google_drive_link(source):
+            yield from self._stream_images_from_gdrive(source)
+        elif self._is_zip_file(source):
+            yield from self._stream_images_from_zip(source)
+        elif os.path.isdir(source):
+            yield from self._stream_images_from_directory(source)
+        elif self._is_image_file(source):
+            yield from self._stream_single_image(source)
         else:
             raise ValueError(f"Unsupported source type: {source}")
 
@@ -147,6 +170,83 @@ class InputHandler:
         """Extract folder ID from Google Drive URL"""
         match = re.search(r"/folders/([a-zA-Z0-9_-]+)", url)
         return match.group(1) if match else None
+
+    # Streaming versions for memory efficiency
+    def _stream_single_image(
+        self, source: str
+    ) -> Generator[Tuple[str, Image.Image], None, None]:
+        """Stream a single image file"""
+        try:
+            img = Image.open(source).convert("RGB")
+            name = os.path.basename(source)
+            yield (name, img)
+        except Exception as e:
+            print(f"Error loading image {source}: {e}")
+
+    def _stream_images_from_directory(
+        self, source: str
+    ) -> Generator[Tuple[str, Image.Image], None, None]:
+        """Stream images from a directory"""
+        for filename in os.listdir(source):
+            file_path = os.path.join(source, filename)
+
+            # Skip non-files and non-images
+            if not os.path.isfile(file_path):
+                continue
+
+            ext = os.path.splitext(filename)[1].lower()
+            if ext not in self.supported_image_extensions:
+                continue
+
+            try:
+                img = Image.open(file_path).convert("RGB")
+                yield (filename, img)
+            except Exception as e:
+                print(f"Error loading {filename} from directory: {e}")
+                continue
+
+    def _stream_images_from_zip(
+        self, zip_path: str
+    ) -> Generator[Tuple[str, Image.Image], None, None]:
+        """Stream images from a zip file"""
+        try:
+            with zipfile.ZipFile(zip_path, "r") as zf:
+                for member in zf.namelist():
+                    # Skip directories and non-image files
+                    if member.endswith("/") or not any(
+                        member.lower().endswith(ext)
+                        for ext in self.supported_image_extensions
+                    ):
+                        continue
+
+                    try:
+                        with zf.open(member) as f:
+                            img_data = f.read()
+                            img = Image.open(io.BytesIO(img_data)).convert("RGB")
+                            # Use just the filename, not full path
+                            name = os.path.basename(member)
+                            yield (name, img)
+                    except Exception as e:
+                        print(f"Error loading {member} from zip: {e}")
+                        continue
+
+        except zipfile.BadZipFile:
+            print(f"Error: {zip_path} is not a valid zip file")
+        except Exception as e:
+            print(f"Error processing zip file {zip_path}: {e}")
+
+    def _stream_images_from_gdrive(
+        self, gdrive_url: str
+    ) -> Generator[Tuple[str, Image.Image], None, None]:
+        """
+        Stream images from Google Drive folder (placeholder for now)
+        """
+        print("Google Drive integration not yet implemented")
+        print(
+            "For now, please download the files and use a local zip file or directory"
+        )
+        return
+        yield  # Make this a generator (unreachable but satisfies typing)
 
     def cleanup(self):
         """Clean up any temporary files"""

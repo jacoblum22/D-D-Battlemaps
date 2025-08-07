@@ -20,8 +20,23 @@ class GridDetector:
         self.max_cell_px = 180  # Maximum cell size in pixels
         self.step_px = 10  # Test every 10 pixels
         self.edge_tolerance_px = 2  # Pixel slack at edges
-        self.blackhat_kernel_size = 31  # Morphological kernel size
+        self.max_blackhat_kernel_size = 31  # Maximum morphological kernel size
+        self.min_blackhat_kernel_size = 5  # Minimum morphological kernel size
+        self.kernel_size_ratio = 0.02  # Kernel size as fraction of min image dimension
         self.sample_radius = 2  # Sampling radius around grid lines
+
+    def _get_adaptive_kernel_size(self, image_height: int, image_width: int) -> int:
+        """Calculate adaptive kernel size based on image dimensions"""
+        min_dimension = min(image_height, image_width)
+        adaptive_size = int(min_dimension * self.kernel_size_ratio)
+
+        # Clamp to reasonable bounds
+        kernel_size = max(
+            self.min_blackhat_kernel_size,
+            min(adaptive_size, self.max_blackhat_kernel_size),
+        )
+
+        return kernel_size
 
     def detect_grid(self, pil_img: Image.Image) -> Optional[Dict]:
         """
@@ -110,10 +125,14 @@ class GridDetector:
 
     def _create_blackhat_maps(self, gray: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """Create morphological blackhat maps to highlight grid lines"""
+        # Get adaptive kernel size based on image dimensions
+        H, W = gray.shape
+        kernel_size = self._get_adaptive_kernel_size(H, W)
+
         # Vertical lines kernel (tall and thin)
-        kv = cv2.getStructuringElement(cv2.MORPH_RECT, (self.blackhat_kernel_size, 1))
+        kv = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_size, 1))
         # Horizontal lines kernel (wide and thin)
-        kh = cv2.getStructuringElement(cv2.MORPH_RECT, (1, self.blackhat_kernel_size))
+        kh = cv2.getStructuringElement(cv2.MORPH_RECT, (1, kernel_size))
 
         # Apply blackhat operation
         v_map = cv2.morphologyEx(gray, cv2.MORPH_BLACKHAT, kv).astype(np.float32)
@@ -146,70 +165,123 @@ class GridDetector:
     def _alignment_score(
         self, intensity_map: np.ndarray, size: int, n_cells: int, direction: str
     ) -> float:
-        """Score how well expected grid positions align with high intensity areas"""
+        """Score how well expected grid positions align with high intensity areas.
+
+        Uses vectorized NumPy operations for performance on large grids.
+        """
         if n_cells < 2:
             return -1e9
 
         step = size / n_cells
-        positions = [round(k * step) for k in range(n_cells + 1)]
+        positions = np.array([round(k * step) for k in range(n_cells + 1)])
 
-        # Sample intensity around each expected grid line
-        samples = []
-        for pos in positions:
-            if direction == "vertical":
-                # Sample columns around vertical grid lines
-                col_start = max(0, pos - self.sample_radius)
-                col_end = min(intensity_map.shape[1], pos + self.sample_radius + 1)
-                sample = intensity_map[:, col_start:col_end].mean()
-            else:  # horizontal
-                # Sample rows around horizontal grid lines
-                row_start = max(0, pos - self.sample_radius)
-                row_end = min(intensity_map.shape[0], pos + self.sample_radius + 1)
-                sample = intensity_map[row_start:row_end, :].mean()
+        # Vectorized sampling for better performance
+        if direction == "vertical":
+            # Sample columns around vertical grid lines using vectorized operations
+            height = intensity_map.shape[0]
 
-            samples.append(float(sample))
+            # Calculate column ranges for all positions at once
+            col_starts = np.maximum(0, positions - self.sample_radius)
+            col_ends = np.minimum(
+                intensity_map.shape[1], positions + self.sample_radius + 1
+            )
+
+            # Extract samples for all positions using list comprehension with vectorized slicing
+            samples = np.array(
+                [
+                    intensity_map[:, col_starts[i] : col_ends[i]].mean()
+                    for i in range(len(positions))
+                ]
+            )
+        else:  # horizontal
+            # Sample rows around horizontal grid lines using vectorized operations
+            width = intensity_map.shape[1]
+
+            # Calculate row ranges for all positions at once
+            row_starts = np.maximum(0, positions - self.sample_radius)
+            row_ends = np.minimum(
+                intensity_map.shape[0], positions + self.sample_radius + 1
+            )
+
+            # Extract samples for all positions using list comprehension with vectorized slicing
+            samples = np.array(
+                [
+                    intensity_map[row_starts[i] : row_ends[i], :].mean()
+                    for i in range(len(positions))
+                ]
+            )
 
         return float(np.mean(samples))
 
     def _contrast_score(
         self, intensity_map: np.ndarray, size: int, n_cells: int, direction: str
     ) -> float:
-        """Score contrast between grid lines and mid-cell areas"""
+        """Score contrast between grid lines and mid-cell areas.
+
+        Uses vectorized NumPy operations for performance on large grids.
+        """
         if n_cells < 2:
             return -1e9
 
         step = size / n_cells
 
-        # Grid line positions
-        on_positions = [round(k * step) for k in range(n_cells + 1)]
-        # Mid-cell positions
-        mid_positions = [round((k + 0.5) * step) for k in range(n_cells)]
+        # Grid line positions and mid-cell positions
+        on_positions = np.array([round(k * step) for k in range(n_cells + 1)])
+        mid_positions = np.array([round((k + 0.5) * step) for k in range(n_cells)])
 
-        # Sample intensities
-        on_samples = []
-        mid_samples = []
+        # Vectorized sampling for better performance
+        if direction == "vertical":
+            # Calculate column ranges for all positions at once
+            on_col_starts = np.maximum(0, on_positions - self.sample_radius)
+            on_col_ends = np.minimum(
+                intensity_map.shape[1], on_positions + self.sample_radius + 1
+            )
 
-        for pos in on_positions:
-            if direction == "vertical":
-                col_start = max(0, pos - self.sample_radius)
-                col_end = min(intensity_map.shape[1], pos + self.sample_radius + 1)
-                sample = intensity_map[:, col_start:col_end].mean()
-            else:
-                row_start = max(0, pos - self.sample_radius)
-                row_end = min(intensity_map.shape[0], pos + self.sample_radius + 1)
-                sample = intensity_map[row_start:row_end, :].mean()
-            on_samples.append(sample)
+            mid_col_starts = np.maximum(0, mid_positions - self.sample_radius)
+            mid_col_ends = np.minimum(
+                intensity_map.shape[1], mid_positions + self.sample_radius + 1
+            )
 
-        for pos in mid_positions:
-            if direction == "vertical":
-                col_start = max(0, pos - self.sample_radius)
-                col_end = min(intensity_map.shape[1], pos + self.sample_radius + 1)
-                sample = intensity_map[:, col_start:col_end].mean()
-            else:
-                row_start = max(0, pos - self.sample_radius)
-                row_end = min(intensity_map.shape[0], pos + self.sample_radius + 1)
-                sample = intensity_map[row_start:row_end, :].mean()
-            mid_samples.append(sample)
+            # Extract samples using vectorized operations
+            on_samples = np.array(
+                [
+                    intensity_map[:, on_col_starts[i] : on_col_ends[i]].mean()
+                    for i in range(len(on_positions))
+                ]
+            )
+
+            mid_samples = np.array(
+                [
+                    intensity_map[:, mid_col_starts[i] : mid_col_ends[i]].mean()
+                    for i in range(len(mid_positions))
+                ]
+            )
+        else:  # horizontal
+            # Calculate row ranges for all positions at once
+            on_row_starts = np.maximum(0, on_positions - self.sample_radius)
+            on_row_ends = np.minimum(
+                intensity_map.shape[0], on_positions + self.sample_radius + 1
+            )
+
+            mid_row_starts = np.maximum(0, mid_positions - self.sample_radius)
+            mid_row_ends = np.minimum(
+                intensity_map.shape[0], mid_positions + self.sample_radius + 1
+            )
+
+            # Extract samples using vectorized operations
+            on_samples = np.array(
+                [
+                    intensity_map[on_row_starts[i] : on_row_ends[i], :].mean()
+                    for i in range(len(on_positions))
+                ]
+            )
+
+            mid_samples = np.array(
+                [
+                    intensity_map[mid_row_starts[i] : mid_row_ends[i], :].mean()
+                    for i in range(len(mid_positions))
+                ]
+            )
 
         # Return difference (grid lines should be brighter than mid-cells)
         return float(np.mean(on_samples) - np.mean(mid_samples))

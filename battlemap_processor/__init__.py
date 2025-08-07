@@ -5,12 +5,25 @@ A tool for extracting grid-aligned tiles from D&D battlemap images.
 Supports Google Drive links and local zip files as input sources.
 """
 
+import logging
 from .core.input_handler import InputHandler
 from .core.grid_detector import GridDetector
 from .core.tile_extractor import TileExtractor
 from .core.image_processor import ImageProcessor
 
 __version__ = "0.1.0"
+
+# Set up logging
+logger = logging.getLogger(__name__)
+
+# Add console handler by default if no handlers exist
+if not logger.handlers:
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(message)s")  # Simple format for console
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+    logger.setLevel(logging.INFO)
 
 
 class BattlemapProcessor:
@@ -33,25 +46,26 @@ class BattlemapProcessor:
             source: Google Drive URL or local zip file path
             squares_per_tile: Number of grid squares per tile (width/height)
         """
-        print(f"Processing source: {source}")
+        logger.info(f"Processing source: {source}")
 
-        # Step 1: Get images from source
-        images = self.input_handler.get_images_from_source(source)
-        print(f"Found {len(images)} images to process")
-
-        # Step 2: Process each image
+        # Process images one at a time (streaming for memory efficiency)
         total_tiles = 0
-        for img_name, img_data in images.items():
-            print(f"\nProcessing {img_name}...")
+        processed_count = 0
+
+        for img_name, img_data in self.input_handler.stream_images_from_source(source):
+            processed_count += 1
+            logger.info(f"Processing image {processed_count}: {img_name}...")
 
             try:
                 # Detect grid
                 grid_info = self.grid_detector.detect_grid(img_data)
                 if grid_info is None:
-                    print(f"  No grid detected in {img_name}, skipping")
+                    logger.warning(f"  No grid detected in {img_name}, skipping")
                     continue
 
-                print(f"  Grid detected: {grid_info['nx']}x{grid_info['ny']} cells")
+                logger.info(
+                    f"  Grid detected: {grid_info['nx']}x{grid_info['ny']} cells"
+                )
 
                 # Extract tiles
                 tiles = self.tile_extractor.extract_tiles(
@@ -63,14 +77,14 @@ class BattlemapProcessor:
                     tiles, img_name, self.output_dir
                 )
 
-                print(f"  Saved {saved} tiles from {img_name}")
+                logger.info(f"  Saved {saved} tiles from {img_name}")
                 total_tiles += saved
 
             except Exception as e:
-                print(f"  Error processing {img_name}: {e}")
+                logger.exception(f"Error processing {img_name}: {e}")
                 continue
 
-        print(
-            f"\nProcessing complete! Saved {total_tiles} total tiles to {self.output_dir}"
+        logger.info(
+            f"Processing complete! Processed {processed_count} images and saved {total_tiles} total tiles to {self.output_dir}"
         )
         return total_tiles
