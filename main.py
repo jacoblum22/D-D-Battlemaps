@@ -10,55 +10,104 @@ Where source can be:
     - Path to a single image file
     - Google Drive folder URL (not yet implemented)
 """
+
 import argparse
 import os
 import sys
+from urllib.parse import urlparse
 from battlemap_processor import BattlemapProcessor
+
+
+def _is_google_drive_url(source: str) -> bool:
+    """Check if source is a valid Google Drive URL"""
+    try:
+        parsed = urlparse(source)
+        return parsed.netloc == "drive.google.com" and "/folders/" in parsed.path
+    except Exception:
+        return False
+
+
+def _is_remote_url(source: str) -> bool:
+    """Check if source is a remote URL"""
+    try:
+        parsed = urlparse(source)
+        return parsed.scheme in ("http", "https", "s3", "ftp")
+    except Exception:
+        return False
+
 
 def main():
     parser = argparse.ArgumentParser(description="Process D&D battlemap images")
-    parser.add_argument("source", help="Source: zip file, directory, image file, or Google Drive URL")
-    parser.add_argument("--squares", type=int, default=12, 
-                       help="Number of grid squares per tile (default: 12)")
-    parser.add_argument("--output", default="output", 
-                       help="Output directory (default: 'output')")
-    parser.add_argument("--tile-size", type=int, default=512,
-                       help="Output tile size in pixels (default: 512)")
-    
+    parser.add_argument(
+        "source", help="Source: zip file, directory, image file, or Google Drive URL"
+    )
+    parser.add_argument(
+        "--squares",
+        type=int,
+        default=12,
+        help="Number of grid squares per tile (default: 12)",
+    )
+    parser.add_argument(
+        "--output", default="output", help="Output directory (default: 'output')"
+    )
+    parser.add_argument(
+        "--tile-size",
+        type=int,
+        default=512,
+        help="Output tile size in pixels (default: 512)",
+    )
+
     args = parser.parse_args()
-    
+
     # Validate source
-    if not (os.path.exists(args.source) or 'drive.google.com' in args.source):
-        print(f"Error: Source '{args.source}' does not exist")
+    if not (
+        os.path.exists(args.source)
+        or _is_google_drive_url(args.source)
+        or _is_remote_url(args.source)
+    ):
+        print(
+            f"Error: Source '{args.source}' does not exist and is not a valid remote URL"
+        )
         return 1
-    
+
     # Validate parameters
     if args.squares < 8 or args.squares > 20:
         print("Warning: squares per tile should typically be between 8-20")
-    
+
+    # Validate tile size
+    if args.tile_size <= 0:
+        print(f"Error: tile size must be positive, got {args.tile_size}")
+        return 1
+    if args.tile_size > 4096:
+        print(f"Error: tile size too large ({args.tile_size}), maximum is 4096")
+        return 1
+    if args.tile_size < 64:
+        print(
+            f"Warning: tile size ({args.tile_size}) is very small, recommended minimum is 64"
+        )
+
     # Create processor
     print(f"Initializing battlemap processor...")
     print(f"  Output directory: {args.output}")
-    print(f"  Tile size: {args.tile_size}x{args.tile_size}")  
+    print(f"  Tile size: {args.tile_size}x{args.tile_size}")
     print(f"  Squares per tile: {args.squares}x{args.squares}")
-    
-    processor = BattlemapProcessor(
-        output_dir=args.output,
-        tile_size=args.tile_size
-    )
-    
+
+    processor = BattlemapProcessor(output_dir=args.output, tile_size=args.tile_size)
+
     try:
         # Process the source
         total_tiles = processor.process_source(args.source, args.squares)
-        
+
         if total_tiles > 0:
             print(f"\nSuccess! Extracted {total_tiles} tiles.")
             print(f"Check the output directory: {args.output}")
         else:
-            print("\nNo tiles were extracted. Check if your images have detectable grids.")
-        
+            print(
+                "\nNo tiles were extracted. Check if your images have detectable grids."
+            )
+
         return 0
-        
+
     except KeyboardInterrupt:
         print("\nProcessing interrupted by user")
         return 1
@@ -68,6 +117,7 @@ def main():
     finally:
         # Cleanup any temporary files
         processor.input_handler.cleanup()
+
 
 if __name__ == "__main__":
     sys.exit(main())
