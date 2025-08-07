@@ -173,7 +173,8 @@ class GridDetector:
             return -1e9
 
         step = size / n_cells
-        positions = np.array([round(k * step) for k in range(n_cells + 1)])
+        # Pre-allocate array and use vectorized operations
+        positions = np.round(np.arange(n_cells + 1) * step).astype(int)
 
         # Vectorized sampling for better performance
         if direction == "vertical":
@@ -225,9 +226,9 @@ class GridDetector:
 
         step = size / n_cells
 
-        # Grid line positions and mid-cell positions
-        on_positions = np.array([round(k * step) for k in range(n_cells + 1)])
-        mid_positions = np.array([round((k + 0.5) * step) for k in range(n_cells)])
+        # Grid line positions and mid-cell positions using pre-allocated arrays
+        on_positions = np.round(np.arange(n_cells + 1) * step).astype(int)
+        mid_positions = np.round((np.arange(n_cells) + 0.5) * step).astype(int)
 
         # Vectorized sampling for better performance
         if direction == "vertical":

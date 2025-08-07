@@ -77,19 +77,20 @@ class AdvancedBoringDetector:
                 x0, x1 = x_edges[col], x_edges[col + 1]
                 y0, y1 = y_edges[row], y_edges[row + 1]
                 square = img.crop((x0, y0, x1, y1))
+                square_array = np.array(square)
 
                 # Check if square is black
-                if self._is_black_square(np.array(square)):
+                if self._is_black_square(square_array):
                     square_analysis[(col, row)] = "black"
                     black_count += 1
                 else:
-                    # Mark as potentially uniform for region analysis
-                    square_analysis[(col, row)] = "good"
-                    features = self._extract_square_features(square)
-                    square_features[(col, row)] = features
-
-                    if features["is_uniform"]:
+                    # Check uniformity first (cheap test)
+                    if self._is_uniform_square(square_array):
+                        # Only extract full features for uniform squares
+                        features = self._extract_square_features_from_array(square_array)
+                        square_features[(col, row)] = features
                         uniform_count += 1
+                        
                         if (
                             debug and uniform_count <= 3
                         ):  # Show first few uniform squares
@@ -98,6 +99,9 @@ class AdvancedBoringDetector:
                                 f"texture_var={features['texture_variance']:.1f}, "
                                 f"sat={features['mean_saturation']:.1f}"
                             )
+                    
+                    # Mark as good (will be processed later if uniform)
+                    square_analysis[(col, row)] = "good"
 
         if debug:
             print(f"  Black squares: {black_count}")
@@ -105,9 +109,7 @@ class AdvancedBoringDetector:
             print(f"  Good squares: {len(square_features)}")
 
         # Step 2: Find connected regions of uniform squares
-        uniform_squares = {
-            pos for pos, features in square_features.items() if features["is_uniform"]
-        }
+        uniform_squares = set(square_features.keys())  # Only squares that passed uniformity check have features
 
         if debug:
             print(f"  Squares eligible for region analysis: {len(uniform_squares)}")
@@ -227,11 +229,14 @@ class AdvancedBoringDetector:
     def _extract_square_features(self, square: Image.Image) -> Dict:
         """Extract features from a square for region analysis"""
         img_array = np.array(square)
+        return self._extract_square_features_from_array(img_array)
 
+    def _extract_square_features_from_array(self, img_array: np.ndarray) -> Dict:
+        """Extract features from a square array for region analysis (optimized version)"""
         # Color features
         mean_color = img_array.mean(axis=(0, 1))
 
-        # Check if square meets uniformity criteria
+        # Check if square meets uniformity criteria (already computed, but store result)
         is_uniform = self._is_uniform_square(img_array)
 
         # Texture features

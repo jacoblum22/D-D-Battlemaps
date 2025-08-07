@@ -186,24 +186,24 @@ class InputHandler:
     def _stream_images_from_directory(
         self, source: str
     ) -> Generator[Tuple[str, Image.Image], None, None]:
-        """Stream images from a directory"""
-        for filename in os.listdir(source):
-            file_path = os.path.join(source, filename)
+        """Stream images from a directory recursively"""
+        for root, dirs, files in os.walk(source):
+            for filename in files:
+                file_path = os.path.join(root, filename)
 
-            # Skip non-files and non-images
-            if not os.path.isfile(file_path):
-                continue
+                # Skip non-images
+                ext = os.path.splitext(filename)[1].lower()
+                if ext not in self.supported_image_extensions:
+                    continue
 
-            ext = os.path.splitext(filename)[1].lower()
-            if ext not in self.supported_image_extensions:
-                continue
-
-            try:
-                img = Image.open(file_path).convert("RGB")
-                yield (filename, img)
-            except Exception as e:
-                print(f"Error loading {filename} from directory: {e}")
-                continue
+                try:
+                    img = Image.open(file_path).convert("RGB")
+                    # Create a unique name including folder structure
+                    rel_path = os.path.relpath(file_path, source)
+                    yield (rel_path, img)
+                except Exception as e:
+                    print(f"Error loading {filename} from directory: {e}")
+                    continue
 
     def _stream_images_from_zip(
         self, zip_path: str
