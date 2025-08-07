@@ -87,10 +87,12 @@ class AdvancedBoringDetector:
                     # Check uniformity first (cheap test)
                     if self._is_uniform_square(square_array):
                         # Only extract full features for uniform squares
-                        features = self._extract_square_features_from_array(square_array)
+                        features = self._extract_square_features_from_array(
+                            square_array
+                        )
                         square_features[(col, row)] = features
                         uniform_count += 1
-                        
+
                         if (
                             debug and uniform_count <= 3
                         ):  # Show first few uniform squares
@@ -99,7 +101,7 @@ class AdvancedBoringDetector:
                                 f"texture_var={features['texture_variance']:.1f}, "
                                 f"sat={features['mean_saturation']:.1f}"
                             )
-                    
+
                     # Mark as good (will be processed later if uniform)
                     square_analysis[(col, row)] = "good"
 
@@ -109,7 +111,9 @@ class AdvancedBoringDetector:
             print(f"  Good squares: {len(square_features)}")
 
         # Step 2: Find connected regions of uniform squares
-        uniform_squares = set(square_features.keys())  # Only squares that passed uniformity check have features
+        uniform_squares = set(
+            square_features.keys()
+        )  # Only squares that passed uniformity check have features
 
         if debug:
             print(f"  Squares eligible for region analysis: {len(uniform_squares)}")
