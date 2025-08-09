@@ -9,9 +9,13 @@ Now includes filename parsing to extract grid dimensions from image names.
 import numpy as np
 import cv2
 import re
+import logging
 from typing import Optional, Dict, Tuple, List
 from PIL import Image
 from pathlib import Path
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 
 class GridDetector:
@@ -74,8 +78,8 @@ class GridDetector:
             r"\[(\d+)[x×](\d+)\]",
             # Curly braces: {10x10}, {15x20}
             r"\{(\d+)[x×](\d+)\}",
-            # Underscores: Map_10x10_File, Forest_20x25_Night
-            r"_(\d+)[x×](\d+)_",
+            # Underscores: Map_10x10_File, Forest_20x25_Night, Map_10x10.jpg
+            r"_(\d+)[x×](\d+)(?:_|$)",
             # Standalone: 10x10, 15x20 (with word boundaries)
             r"\b(\d+)[x×](\d+)\b",
             # With spaces: 10 x 10, 15 x 20
@@ -157,7 +161,7 @@ class GridDetector:
         if filename:
             filename_dims = self.extract_dimensions_from_filename(filename)
             if filename_dims:
-                print(
+                logger.debug(
                     f"📏 Found dimensions in filename '{filename}': {filename_dims[0]}x{filename_dims[1]}"
                 )
 

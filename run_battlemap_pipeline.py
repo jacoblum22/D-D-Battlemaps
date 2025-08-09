@@ -160,13 +160,15 @@ def collect_sources() -> List[str]:
 
 def configure_pipeline() -> PipelineConfig:
     """Configure pipeline settings interactively"""
-    print("\\n⚙️  Pipeline Configuration")
+    print()
+    print("⚙️ Pipeline Configuration")
     print("═══════════════════════════")
 
     # Collect sources
     sources = collect_sources()
 
-    print("\\n🎯 Processing Settings")
+    print()
+    print("🎯 Processing Settings")
     print("─────────────────────")
 
     # Smart selection
@@ -176,7 +178,8 @@ def configure_pipeline() -> PipelineConfig:
     )
 
     # Limits for proof-of-concept
-    print("\\n🔢 Processing Limits")
+    print()
+    print("🔢 Processing Limits")
     print("─────────────────────")
     print(
         "Set limits to create a manageable dataset (or use unlimited for full processing):"
@@ -193,7 +196,8 @@ def configure_pipeline() -> PipelineConfig:
     )
 
     # Detection settings
-    print("\\n🔍 Detection Settings")
+    print()
+    print("🔍 Detection Settings")
     print("──────────────────────")
 
     tile_size = get_int_input("Tile size (grid squares)", default=12)
@@ -202,14 +206,16 @@ def configure_pipeline() -> PipelineConfig:
     )
 
     # Output settings
-    print("\\n💾 Output Settings")
+    print()
+    print("💾 Output Settings")
     print("───────────────────")
 
     output_dir = get_user_input("Output directory", default="generated_images")
     tile_output_size = get_int_input("Tile output size (pixels)", default=512)
 
     # Processing settings
-    print("\\n🛠️  Processing Settings")
+    print()
+    print("🛠️ Processing Settings")
     print("────────────────────────")
 
     save_progress = get_yes_no("Save progress for resuming?", default=True)
@@ -234,7 +240,8 @@ def configure_pipeline() -> PipelineConfig:
 
 def show_config_summary(config: PipelineConfig):
     """Show a summary of the pipeline configuration"""
-    print("\\n📋 Configuration Summary")
+    print()
+    print("📋 Configuration Summary")
     print("═════════════════════════")
     print(f"Sources:              {len(config.sources)} source(s)")
     for i, source in enumerate(config.sources, 1):
@@ -273,12 +280,13 @@ def main():
         default_output = "generated_images"
         if check_for_existing_progress(default_output):
             resume = get_yes_no(
-                f"\\n📁 Found existing progress in '{default_output}'. Resume from where you left off?",
+                f"📁 Found existing progress in '{default_output}'. Resume from where you left off?",
                 default=True,
             )
 
             if resume:
-                print("\\n▶️  Resuming from saved progress...")
+                print()
+                print("▶️ Resuming from saved progress...")
                 # Load existing config and run
                 config = PipelineConfig(
                     sources=[], output_dir=default_output
@@ -286,9 +294,11 @@ def main():
                 pipeline = BattlemapPipeline(config)
                 if pipeline.resume_from_progress():
                     print("✅ Progress loaded successfully")
-                    print("\\n🚀 Continuing pipeline processing...")
+                    print()
+                    print("🚀 Continuing pipeline processing...")
                     stats = pipeline.run()
-                    print("\\n🎉 Pipeline completed!")
+                    print()
+                    print("🎉 Pipeline completed!")
                     return
                 else:
                     print("❌ Could not load progress. Starting fresh...")
@@ -299,20 +309,24 @@ def main():
         # Show summary and confirm
         show_config_summary(config)
 
-        if not get_yes_no("\\nProceed with this configuration?", default=True):
+        if not get_yes_no("Proceed with this configuration?", default=True):
             print("❌ Configuration cancelled.")
             return
 
         # Create and run pipeline
-        print("\\n🚀 Starting pipeline...")
+        print()
+        print("🚀 Starting pipeline...")
         pipeline = BattlemapPipeline(config)
 
         try:
             stats = pipeline.run()
-            print("\\n🎉 Pipeline completed successfully!")
+            print()
+            print("🎉 Pipeline completed successfully!")
 
         except KeyboardInterrupt:
-            print("\\n\\n⏸️  Pipeline interrupted by user.")
+            print()
+            print()
+            print("⏸️ Pipeline interrupted by user.")
             if config.save_progress:
                 print(
                     "💾 Progress has been saved. You can resume later by running this script again."
@@ -320,7 +334,8 @@ def main():
             sys.exit(0)
 
         except Exception as e:
-            print(f"\\n❌ Pipeline error: {e}")
+            print()
+            print(f"❌ Pipeline error: {e}")
             if config.save_progress:
                 print(
                     "💾 Progress has been saved. You can resume later after fixing the issue."
@@ -328,10 +343,13 @@ def main():
             sys.exit(1)
 
     except KeyboardInterrupt:
-        print("\\n\\n👋 Goodbye!")
+        print()
+        print()
+        print("👋 Goodbye!")
         sys.exit(0)
     except Exception as e:
-        print(f"\\n❌ Unexpected error: {e}")
+        print()
+        print(f"❌ Unexpected error: {e}")
         sys.exit(1)
 
 

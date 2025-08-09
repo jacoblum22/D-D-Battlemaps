@@ -12,9 +12,10 @@ import shutil
 import stat
 import time
 from pathlib import Path
+from typing import Union
 
 
-def force_remove_file(file_path):
+def force_remove_file(file_path: str) -> bool:
     """
     Forcefully remove a file by changing permissions first
     """
@@ -28,7 +29,7 @@ def force_remove_file(file_path):
         return False
 
 
-def force_remove_directory(dir_path):
+def force_remove_directory(dir_path: Union[str, Path]) -> bool:
     """
     Forcefully remove a directory and all its contents
     """
@@ -47,7 +48,7 @@ def force_remove_directory(dir_path):
         return False
 
 
-def clear_generated_images_robust(folder_name: str = "generated_images"):
+def clear_generated_images_robust(folder_name: str = "generated_images") -> None:
     """
     Robustly clear the generated images folder with Windows permission handling
     
@@ -67,7 +68,7 @@ def clear_generated_images_robust(folder_name: str = "generated_images"):
     
     print(f"🔍 Scanning '{folder_name}' folder...")
     
-    for root, dirs, files in os.walk(folder_path):
+    for root, _dirs, files in os.walk(folder_path):
         total_files += len(files)
         for file in files:
             file_path = os.path.join(root, file)
@@ -133,24 +134,24 @@ def clear_generated_images_robust(folder_name: str = "generated_images"):
         print(f"⚠️  Could not fully clear main directory: {e}")
     
     # Report results
-    print(f"\n📊 Deletion Summary:")
+    print("\n📊 Deletion Summary:")
     print(f"  ✅ Successfully removed: {success_count} items")
     if failed_count > 0:
         print(f"  ❌ Failed to remove: {failed_count} items")
-        print(f"\n🔧 Suggested solutions for stubborn files:")
-        print(f"  1. Close any programs that might be using the files")
-        print(f"  2. Wait a moment and try again (files might be temporarily locked)")
-        print(f"  3. Restart your computer if the issue persists")
-        print(f"  4. Try running the script as Administrator")
+        print("\n🔧 Suggested solutions for stubborn files:")
+        print("  1. Close any programs that might be using the files")
+        print("  2. Wait a moment and try again (files might be temporarily locked)")
+        print("  3. Restart your computer if the issue persists")
+        print("  4. Try running the script as Administrator")
         
         # Show first few failed files
-        print(f"\n📝 Failed files/folders:")
+        print("\n📝 Failed files/folders:")
         for failed_file in failed_files[:5]:
             print(f"  - {failed_file}")
         if len(failed_files) > 5:
             print(f"  ... and {len(failed_files) - 5} more")
     else:
-        print(f"✅ All files successfully cleared!")
+        print("✅ All files successfully cleared!")
 
 
 def clear_generated_images(folder_name: str = "generated_images"):
@@ -164,7 +165,7 @@ def clear_generated_images(folder_name: str = "generated_images"):
     clear_generated_images_robust(folder_name)
 
 
-def main():
+def main() -> None:
     """Main function"""
     print("🧹 Generated Images Folder Cleaner")
     print("═══════════════════════════════════")

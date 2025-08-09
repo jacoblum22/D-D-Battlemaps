@@ -50,14 +50,21 @@ output/
 generated_images/
 # Default pipeline output folder
 generated_tiles/
-# Test pipeline output
+# Test pipeline output - ignore all image formats in specific directories
 test_pipeline_output/*.png
-*.jpg
-*.jpeg
-*.webp
-*.bmp
-*.tif
-*.tiff
+test_pipeline_output/*.jpg
+test_pipeline_output/*.jpeg
+test_pipeline_output/*.webp
+test_pipeline_output/*.bmp
+test_pipeline_output/*.tif
+test_pipeline_output/*.tiff
+test_images/*.png
+test_images/*.jpg
+test_images/*.jpeg
+test_images/*.webp
+test_images/*.bmp
+test_images/*.tif
+test_images/*.tiff
 
 # Pipeline progress files
 *_progress.json

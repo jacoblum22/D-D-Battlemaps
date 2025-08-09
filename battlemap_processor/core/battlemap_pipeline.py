@@ -19,6 +19,7 @@ Features:
 import logging
 import os
 import json
+import contextlib
 import tempfile
 import shutil
 import numpy as np
@@ -444,10 +445,8 @@ class BattlemapPipeline:
                 and self.image_handler.temp_dir  # Check temp_dir is not None
                 and image_path.startswith(self.image_handler.temp_dir)
             ):
-                try:
+                with contextlib.suppress(FileNotFoundError, PermissionError):
                     os.remove(image_path)
-                except:
-                    pass  # Ignore cleanup errors
 
             return True  # Success
 
