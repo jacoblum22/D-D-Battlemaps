@@ -172,7 +172,7 @@ class GoogleDriveHandler:
         patterns = [
             r"/file/d/([a-zA-Z0-9-_]+)",  # File links
             r"/folders/([a-zA-Z0-9-_]+)",  # Folder links
-            r"/uc\\?id=([a-zA-Z0-9-_]+)",  # Direct download format
+            r"/uc\?id=([a-zA-Z0-9-_]+)",  # Direct download format
             r"id=([a-zA-Z0-9-_]+)",  # Direct ID parameter
         ]
 
