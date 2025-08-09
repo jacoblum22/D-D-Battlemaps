@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TilePlacement:
     """Information about a placed tile"""
+
     start_col: int  # Starting grid column
     start_row: int  # Starting grid row
     size: int  # Tile size (12x12 squares)
@@ -32,7 +33,7 @@ class OptimalTilePlacer:
     Places 12x12 tiles optimally on a battlemap to maximize non-boring square coverage
     """
 
-    def __init__(self, tile_size: int = 12, max_boring_percentage: float = 40.0):
+    def __init__(self, tile_size: int = 12, max_boring_percentage: float = 50.0):
         self.tile_size = tile_size
         self.max_boring_percentage = max_boring_percentage
         self.total_squares_per_tile = tile_size * tile_size
@@ -55,7 +56,7 @@ class OptimalTilePlacer:
             List of TilePlacement objects representing optimal tile positions
         """
         nx, ny = grid_info["nx"], grid_info["ny"]
-        
+
         if debug:
             print(f"\n=== Optimal Tile Placement ===")
             print(f"Grid size: {nx}x{ny} squares")
@@ -64,7 +65,7 @@ class OptimalTilePlacer:
 
         # Generate all possible tile positions
         possible_positions = self._generate_possible_positions(nx, ny, debug)
-        
+
         if not possible_positions:
             if debug:
                 print("❌ No valid tile positions possible!")
@@ -77,12 +78,15 @@ class OptimalTilePlacer:
 
         # Filter out positions with too many boring squares
         valid_positions = [
-            (pos, score, analysis) for pos, score, analysis in position_scores
+            (pos, score, analysis)
+            for pos, score, analysis in position_scores
             if analysis.boring_percentage <= self.max_boring_percentage
         ]
 
         if debug:
-            print(f"Valid positions (≤{self.max_boring_percentage}% boring): {len(valid_positions)}")
+            print(
+                f"Valid positions (≤{self.max_boring_percentage}% boring): {len(valid_positions)}"
+            )
 
         if not valid_positions:
             if debug:
@@ -110,14 +114,16 @@ class OptimalTilePlacer:
     ) -> List[Tuple[int, int]]:
         """Generate all possible top-left positions for tiles"""
         positions = []
-        
+
         # Calculate maximum possible starting positions
         max_start_col = nx - self.tile_size
         max_start_row = ny - self.tile_size
 
         if max_start_col < 0 or max_start_row < 0:
             if debug:
-                print(f"❌ Grid too small: need at least {self.tile_size}x{self.tile_size}, got {nx}x{ny}")
+                print(
+                    f"❌ Grid too small: need at least {self.tile_size}x{self.tile_size}, got {nx}x{ny}"
+                )
             return positions
 
         for row in range(max_start_row + 1):
@@ -150,9 +156,11 @@ class OptimalTilePlacer:
             evaluations.append(((start_col, start_row), analysis.good_count, analysis))
 
             if debug and i < 5:  # Show first few evaluations
-                print(f"  Position ({start_col},{start_row}): "
-                      f"{analysis.good_count} good, {analysis.boring_count} boring "
-                      f"({analysis.boring_percentage:.1f}%)")
+                print(
+                    f"  Position ({start_col},{start_row}): "
+                    f"{analysis.good_count} good, {analysis.boring_count} boring "
+                    f"({analysis.boring_percentage:.1f}%)"
+                )
 
         return evaluations
 
@@ -170,8 +178,9 @@ class OptimalTilePlacer:
         for row in range(start_row, start_row + self.tile_size):
             for col in range(start_col, start_col + self.tile_size):
                 reason = square_analysis.get((col, row), "good")
-                
-                if reason in ["black", "large_uniform_region"]:
+
+                # All non-good squares are considered boring
+                if reason != "good":
                     boring_count += 1
                 else:
                     good_count += 1
@@ -207,17 +216,21 @@ class OptimalTilePlacer:
         for i, ((start_col, start_row), score, analysis) in enumerate(valid_positions):
             # Check if this tile would overlap with any already placed tiles
             tile_squares = self._get_tile_squares(start_col, start_row)
-            
+
             if not tile_squares.intersection(occupied_squares):
                 # No overlap, place the tile
                 placed_tiles.append(analysis)
                 occupied_squares.update(tile_squares)
-                
+
                 if debug:
-                    print(f"  Placed tile {len(placed_tiles)} at ({start_col},{start_row}): "
-                          f"{score} good squares ({analysis.boring_percentage:.1f}% boring)")
+                    print(
+                        f"  Placed tile {len(placed_tiles)} at ({start_col},{start_row}): "
+                        f"{score} good squares ({analysis.boring_percentage:.1f}% boring)"
+                    )
             elif debug and i < 10:  # Show first few rejected tiles
-                print(f"  Rejected tile at ({start_col},{start_row}): overlaps existing tile")
+                print(
+                    f"  Rejected tile at ({start_col},{start_row}): overlaps existing tile"
+                )
 
         return placed_tiles
 
@@ -230,9 +243,9 @@ class OptimalTilePlacer:
         return squares
 
     def get_placement_stats(
-        self, 
+        self,
         placed_tiles: List[TilePlacement],
-        square_analysis: Dict[Tuple[int, int], str]
+        square_analysis: Dict[Tuple[int, int], str],
     ) -> Dict[str, Any]:
         """Get statistics about the tile placement"""
         if not placed_tiles:
@@ -248,20 +261,21 @@ class OptimalTilePlacer:
         total_squares_covered = len(placed_tiles) * self.total_squares_per_tile
         good_squares_covered = sum(tile.good_count for tile in placed_tiles)
         boring_squares_covered = sum(tile.boring_count for tile in placed_tiles)
-        
+
         # Calculate total good squares in the image
         total_good_squares = sum(
             1 for reason in square_analysis.values() if reason == "good"
         )
-        
+
         coverage_efficiency = (
             good_squares_covered / total_good_squares * 100
-            if total_good_squares > 0 else 0.0
+            if total_good_squares > 0
+            else 0.0
         )
 
-        avg_boring_percentage = (
-            sum(tile.boring_percentage for tile in placed_tiles) / len(placed_tiles)
-        )
+        avg_boring_percentage = sum(
+            tile.boring_percentage for tile in placed_tiles
+        ) / len(placed_tiles)
 
         return {
             "tiles_placed": len(placed_tiles),

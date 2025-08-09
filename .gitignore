@@ -48,6 +48,8 @@ desktop.ini
 # Generated outputs
 output/
 generated_images/
+generated_tiles/  # Default pipeline output folder
+test_pipeline_output/  # Test pipeline output
 *.png
 *.jpg
 *.jpeg
@@ -55,6 +57,10 @@ generated_images/
 *.bmp
 *.tif
 *.tiff
+
+# Pipeline progress files
+*_progress.json
+pipeline_progress.json
 
 # Test files (keep folder structure but not large images)
 test_images/*.webp
@@ -80,3 +86,11 @@ tmp/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Google Drive API credentials and tokens
+credentials.json
+token.json
+google_drive_credentials.json
+google_drive_token.json
+google_drive_token.pickle
+client_secret*.json
