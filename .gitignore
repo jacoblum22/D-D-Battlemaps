@@ -48,9 +48,10 @@ desktop.ini
 # Generated outputs
 output/
 generated_images/
-generated_tiles/  # Default pipeline output folder
-test_pipeline_output/  # Test pipeline output
-*.png
+# Default pipeline output folder
+generated_tiles/
+# Test pipeline output
+test_pipeline_output/*.png
 *.jpg
 *.jpeg
 *.webp

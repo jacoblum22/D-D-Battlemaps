@@ -15,6 +15,7 @@ import re
 import tempfile
 import zipfile
 import shutil
+import hashlib
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Union
 from urllib.parse import urlparse, parse_qs
@@ -36,6 +37,21 @@ from .smart_image_selector import SmartImageSelector
 logger = logging.getLogger(__name__)
 
 
+class ImageSourceError(Exception):
+    """Base exception for image source handling errors"""
+    pass
+
+
+class UnsafeZipError(ImageSourceError):
+    """Raised when a zip file contains unsafe paths (zip-slip attack)"""
+    pass
+
+
+class DownloadError(ImageSourceError):
+    """Raised when download operations fail"""
+    pass
+
+
 @dataclass
 class ImageInfo:
     """Information about a found image"""
@@ -52,8 +68,9 @@ class ImageSourceHandler:
     Handles finding images from various sources including Google Drive and zip files
     """
 
-    def __init__(self, temp_dir: Optional[str] = None):
+    def __init__(self, temp_dir: Optional[str] = None, request_timeout: int = 30):
         self.temp_dir = temp_dir or tempfile.gettempdir()
+        self.request_timeout = request_timeout  # Default 30 second timeout
         self.image_extensions = {'.png', '.jpg', '.jpeg', '.webp', '.bmp', '.gif', '.tiff', '.tif'}
         self.session = requests.Session()
         self.session.headers.update({
@@ -71,6 +88,54 @@ class ImageSourceHandler:
             except Exception as e:
                 logger.warning(f"Could not initialize Google Drive handler: {e}")
                 self.google_drive_handler = None
+
+    def _generate_unique_filename(self, base_name: str, source: str) -> str:
+        """Generate a unique filename based on source to avoid collisions"""
+        # Create a hash of the source for uniqueness
+        source_hash = hashlib.md5(source.encode('utf-8')).hexdigest()[:8]
+        return f"{base_name}_{source_hash}"
+
+    def _safe_extract_member(self, zip_ref: zipfile.ZipFile, member: zipfile.ZipInfo, extract_dir: str) -> str:
+        """Safely extract a zip member, preventing zip-slip attacks"""
+        # Normalize the member path
+        member_path = os.path.normpath(member.filename)
+        
+        # Check for directory traversal attempts
+        if member_path.startswith('/') or '..' in member_path:
+            raise UnsafeZipError(f"Unsafe path in zip: {member.filename}")
+        
+        # Ensure the extracted path is within the target directory
+        target_path = os.path.join(extract_dir, member_path)
+        target_path = os.path.normpath(target_path)
+        
+        if not target_path.startswith(os.path.abspath(extract_dir)):
+            raise UnsafeZipError(f"Path would extract outside target directory: {member.filename}")
+        
+        # Create directories if needed
+        target_dir = os.path.dirname(target_path)
+        if target_dir:
+            os.makedirs(target_dir, exist_ok=True)
+        
+        # Extract the file
+        with zip_ref.open(member) as source, open(target_path, 'wb') as target:
+            shutil.copyfileobj(source, target)
+        
+        return target_path
+
+    def _safe_extract_all(self, zip_ref: zipfile.ZipFile, extract_dir: str) -> List[str]:
+        """Safely extract all files from zip, preventing zip-slip attacks"""
+        extracted_files = []
+        
+        for member in zip_ref.filelist:
+            if not member.is_dir():
+                try:
+                    extracted_path = self._safe_extract_member(zip_ref, member, extract_dir)
+                    extracted_files.append(extracted_path)
+                except UnsafeZipError as e:
+                    logger.warning(f"Skipping unsafe zip member: {e}")
+                    continue
+        
+        return extracted_files
 
     def find_images_from_source(
         self, source: str, debug: bool = False, list_only: bool = True, 
@@ -133,11 +198,20 @@ class ImageSourceHandler:
             
             return images
 
-        except Exception as e:
+        except (ImageSourceError, requests.RequestException) as e:
+            # These are expected errors that should be logged but not crash the system
             logger.error(f"Error processing source '{source}': {e}")
             if debug:
                 print(f"❌ Error: {e}")
             return []
+        except Exception as e:
+            # Unexpected errors should be logged at critical level and re-raised
+            logger.critical(f"Unexpected error processing source '{source}': {e}")
+            if debug:
+                print(f"❌ Unexpected error: {e}")
+            # In production, consider whether to re-raise or return empty list
+            # For now, re-raise to make debugging easier
+            raise
 
     def _get_images_from_source_internal(
         self, source: str, debug: bool = False, list_only: bool = True
@@ -345,7 +419,7 @@ class ImageSourceHandler:
             if debug:
                 print(f"💾 Attempting download to: {temp_file}")
 
-            response = self.session.get(download_url, stream=True)
+            response = self.session.get(download_url, stream=True, timeout=self.request_timeout)
             
             if response.status_code == 200:
                 with open(temp_file, 'wb') as f:
@@ -412,22 +486,27 @@ class ImageSourceHandler:
             temp_zip = None
             
             if source.startswith(('http://', 'https://')):
-                # Remote zip file
+                # Remote zip file - use unique filename to avoid collisions
                 if debug:
                     print("🌐 Downloading remote zip file...")
                 
-                temp_zip = os.path.join(self.temp_dir, "remote_archive.zip")
-                response = self.session.get(source, stream=True)
+                unique_filename = self._generate_unique_filename("remote_archive.zip", source)
+                temp_zip = os.path.join(self.temp_dir, unique_filename)
                 
-                if response.status_code == 200:
-                    with open(temp_zip, 'wb') as f:
-                        for chunk in response.iter_content(chunk_size=8192):
-                            f.write(chunk)
-                    zip_path = temp_zip
-                else:
-                    if debug:
-                        print(f"❌ Failed to download zip: {response.status_code}")
-                    return []
+                try:
+                    response = self.session.get(source, stream=True, timeout=self.request_timeout)
+                    
+                    if response.status_code == 200:
+                        with open(temp_zip, 'wb') as f:
+                            for chunk in response.iter_content(chunk_size=8192):
+                                f.write(chunk)
+                        zip_path = temp_zip
+                    else:
+                        if debug:
+                            print(f"❌ Failed to download zip: {response.status_code}")
+                        raise DownloadError(f"Failed to download zip file: HTTP {response.status_code}")
+                except requests.RequestException as e:
+                    raise DownloadError(f"Network error downloading zip file: {e}")
             else:
                 zip_path = source
 
@@ -445,11 +524,13 @@ class ImageSourceHandler:
 
             return images
 
+        except (zipfile.BadZipFile, UnsafeZipError) as e:
+            raise ImageSourceError(f"Invalid or unsafe zip file: {e}")
         except Exception as e:
             logger.error(f"Error handling zip file: {e}")
             if debug:
                 print(f"❌ Zip file error: {e}")
-            return []
+            raise ImageSourceError(f"Error processing zip file: {e}")
 
     def _list_images_in_zip(
         self, zip_path: str, source_type: str, source_url: str, debug: bool = False
@@ -496,47 +577,52 @@ class ImageSourceHandler:
     def _extract_and_find_images_from_zip(
         self, zip_path: str, source_type: str, source_url: str, debug: bool = False
     ) -> List[ImageInfo]:
-        """Extract zip and find all images recursively"""
+        """Extract zip and find all images recursively using safe extraction"""
         images = []
         
         try:
-            # Create temp extraction directory
-            extract_dir = os.path.join(self.temp_dir, f"extracted_{os.path.basename(zip_path)}")
+            # Create temp extraction directory with unique name
+            extract_base = self._generate_unique_filename("extracted", zip_path)
+            extract_dir = os.path.join(self.temp_dir, extract_base)
             os.makedirs(extract_dir, exist_ok=True)
 
             if debug:
                 print(f"📂 Extracting to: {extract_dir}")
 
-            # Extract zip file
+            # Safely extract zip file
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(extract_dir)
+                extracted_files = self._safe_extract_all(zip_ref, extract_dir)
 
             if debug:
-                print("✅ Zip extracted successfully")
+                print(f"✅ Zip extracted successfully ({len(extracted_files)} files)")
 
-            # Find images recursively in extracted directory
-            for root, dirs, files in os.walk(extract_dir):
-                for file in files:
-                    if self._is_image_file(file):
-                        file_path = os.path.join(root, file)
-                        relative_path = os.path.relpath(file_path, extract_dir)
-                        
-                        images.append(ImageInfo(
-                            path=file_path,
-                            filename=file,
-                            source_type=source_type,
-                            relative_path=relative_path,
-                            size_bytes=os.path.getsize(file_path),
-                            source_url=source_url
-                        ))
+            # Find images in extracted files
+            for file_path in extracted_files:
+                if self._is_image_file(file_path):
+                    file = os.path.basename(file_path)
+                    relative_path = os.path.relpath(file_path, extract_dir)
+                    
+                    images.append(ImageInfo(
+                        path=file_path,
+                        filename=file,
+                        source_type=source_type,
+                        relative_path=relative_path,
+                        size_bytes=os.path.getsize(file_path),
+                        source_url=source_url
+                    ))
 
             if debug:
                 print(f"🖼️ Found {len(images)} images in zip")
 
+        except UnsafeZipError as e:
+            raise ImageSourceError(f"Unsafe zip file detected: {e}")
+        except zipfile.BadZipFile as e:
+            raise ImageSourceError(f"Invalid zip file: {e}")
         except Exception as e:
             logger.error(f"Error extracting zip: {e}")
             if debug:
                 print(f"❌ Zip extraction error: {e}")
+            raise ImageSourceError(f"Error extracting zip file: {e}")
 
         return images
 
@@ -627,7 +713,7 @@ class ImageSourceHandler:
                     print("🔍 Checking URL headers without downloading...")
                 
                 # HEAD request to check content type without downloading
-                response = self.session.head(url)
+                response = self.session.head(url, timeout=self.request_timeout)
                 if response.status_code == 200:
                     content_type = response.headers.get('content-type', '').lower()
                     if any(img_type in content_type for img_type in ['image/', 'png', 'jpg', 'jpeg', 'webp']):
@@ -651,25 +737,32 @@ class ImageSourceHandler:
                         return []
             else:
                 # Full download for non-list mode
-                temp_file = os.path.join(self.temp_dir, "downloaded_file")
-                response = self.session.get(url, stream=True)
+                temp_file = os.path.join(self.temp_dir, self._generate_unique_filename("downloaded_file", url))
                 
-                if response.status_code == 200:
-                    with open(temp_file, 'wb') as f:
-                        for chunk in response.iter_content(chunk_size=8192):
-                            f.write(chunk)
+                try:
+                    response = self.session.get(url, stream=True, timeout=self.request_timeout)
+                    
+                    if response.status_code == 200:
+                        with open(temp_file, 'wb') as f:
+                            for chunk in response.iter_content(chunk_size=8192):
+                                f.write(chunk)
 
-                    if self._is_image_file(temp_file):
-                        if debug:
-                            print("🖼️ Downloaded file is an image")
-                        return [ImageInfo(
-                            path=temp_file,
-                            filename=os.path.basename(urlparse(url).path) or "downloaded_image",
-                            source_type="url",
-                            relative_path=os.path.basename(urlparse(url).path) or "downloaded_image",
-                            size_bytes=os.path.getsize(temp_file),
-                            source_url=url
-                        )]
+                        if self._is_image_file(temp_file):
+                            if debug:
+                                print("🖼️ Downloaded file is an image")
+                            return [ImageInfo(
+                                path=temp_file,
+                                filename=os.path.basename(urlparse(url).path) or "downloaded_image",
+                                source_type="url",
+                                relative_path=os.path.basename(urlparse(url).path) or "downloaded_image",
+                                size_bytes=os.path.getsize(temp_file),
+                                source_url=url
+                            )]
+                    else:
+                        raise DownloadError(f"Failed to download from URL: HTTP {response.status_code}")
+                        
+                except requests.RequestException as e:
+                    raise DownloadError(f"Network error downloading from URL: {e}")
 
         except Exception as e:
             logger.error(f"Error handling URL: {e}")
@@ -741,7 +834,7 @@ class ImageSourceHandler:
                         download_url = f"https://drive.google.com/uc?id={file_id}&export=download"
                         temp_file = os.path.join(self.temp_dir, f"pipeline_fallback_{file_id}_{image_info.filename}")
                         
-                        response = self.session.get(download_url, stream=True)
+                        response = self.session.get(download_url, stream=True, timeout=self.request_timeout)
                         if response.status_code == 200:
                             with open(temp_file, 'wb') as f:
                                 for chunk in response.iter_content(chunk_size=8192):
@@ -783,14 +876,35 @@ class ImageSourceHandler:
                     
                     try:
                         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                            with zip_ref.open(internal_path) as source, open(temp_file, 'wb') as target:
-                                shutil.copyfileobj(source, target)
+                            # Find the member in the zip
+                            member = None
+                            for m in zip_ref.filelist:
+                                if m.filename == internal_path:
+                                    member = m
+                                    break
+                            
+                            if not member:
+                                if debug:
+                                    print(f"❌ File not found in zip: {internal_path}")
+                                return None
+                            
+                            # Use safe extraction for single file
+                            temp_extract_dir = os.path.join(self.temp_dir, "temp_single_extract")
+                            os.makedirs(temp_extract_dir, exist_ok=True)
+                            
+                            extracted_path = self._safe_extract_member(zip_ref, member, temp_extract_dir)
+                            
+                            # Move to final location
+                            shutil.move(extracted_path, temp_file)
+                            
+                            # Cleanup temp directory
+                            shutil.rmtree(temp_extract_dir, ignore_errors=True)
                         
                         if debug:
                             print(f"✅ Extracted from zip to: {temp_file}")
                         return temp_file
                     
-                    except (KeyError, zipfile.BadZipFile) as e:
+                    except (KeyError, zipfile.BadZipFile, UnsafeZipError) as e:
                         if debug:
                             print(f"❌ Failed to extract from zip: {e}")
                         return None
@@ -812,7 +926,7 @@ class ImageSourceHandler:
                     actual_url = image_info.path.replace("url://", "")
                     temp_file = os.path.join(self.temp_dir, f"pipeline_url_{image_info.filename}")
                     
-                    response = self.session.get(actual_url, stream=True)
+                    response = self.session.get(actual_url, stream=True, timeout=self.request_timeout)
                     if response.status_code == 200:
                         with open(temp_file, 'wb') as f:
                             for chunk in response.iter_content(chunk_size=8192):

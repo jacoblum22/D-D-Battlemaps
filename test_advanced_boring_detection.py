@@ -293,9 +293,20 @@ def visualize_advanced_boring_detection(
 
     # Print detailed statistics
     print(f"\n=== Detailed Boring Detection Breakdown ===")
-    total_squares = sum(type_counts.values())
+    total_grid_squares = stats["total_squares"]
+    total_boring_squares = sum(type_counts.values())
+    good_squares = total_grid_squares - total_boring_squares
+
+    # Print total grid analysis
+    good_percentage = (
+        good_squares / total_grid_squares * 100 if total_grid_squares > 0 else 0
+    )
+    print(f"Total squares analyzed: {total_grid_squares}")
+    print(f"Good squares: {good_squares} ({good_percentage:.1f}%)")
+
+    # Print breakdown by boring type
     for reason, count in sorted(type_counts.items()):
-        percentage = count / total_squares * 100 if total_squares > 0 else 0
+        percentage = count / total_grid_squares * 100 if total_grid_squares > 0 else 0
         print(
             f"{reason.replace('_', ' ').title()}: {count} squares ({percentage:.1f}%)"
         )
@@ -397,31 +408,28 @@ def analyze_google_drive_folder(drive_url, show_popup=True):
             if len(variants) <= 1:
                 return variants
 
-            # Apply the same logic as select_best_variant but return sorted list
-            # Priority 1: Check for filename subsequence (prefer longer names)
-            for i, variant_a in enumerate(variants):
-                for j, variant_b in enumerate(variants):
-                    if i != j:
-                        from pathlib import Path
+            from pathlib import Path
 
-                        base_a = Path(variant_a.filename).stem
-                        base_b = Path(variant_b.filename).stem
+            # Build filename stem lookup for efficient subsequence checking
+            stem_to_variant = {Path(v.filename).stem: v for v in variants}
+            stems = list(stem_to_variant.keys())
 
-                        # If A is a subsequence of B, B should come first (longer name)
-                        if selector._is_subsequence(base_a, base_b):
-                            # Move variant_b to front
-                            result = [variant_b] + [
-                                v for v in variants if v != variant_b
-                            ]
-                            return result
-                        elif selector._is_subsequence(base_b, base_a):
-                            # Move variant_a to front
-                            result = [variant_a] + [
-                                v for v in variants if v != variant_a
-                            ]
-                            return result
+            # Check for subsequence relationships (avoid O(n²) pairwise comparison)
+            best_variant = None
+            for stem in stems:
+                # Check if this stem is a superstring of any other stem
+                is_superstring = any(
+                    other_stem != stem and other_stem in stem for other_stem in stems
+                )
+                if is_superstring:
+                    best_variant = stem_to_variant[stem]
+                    break
 
-            # Priority 2 & 3: Apply dimension-based rules
+            if best_variant:
+                # Put the best variant first, maintain order for others
+                return [best_variant] + [v for v in variants if v != best_variant]
+
+            # Priority 2 & 3: Apply dimension-based rules using public selector logic
             has_dimensions = any(v.has_dimensions for v in variants)
 
             if has_dimensions:

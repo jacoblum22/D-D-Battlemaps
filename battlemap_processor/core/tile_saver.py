@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import shutil
+import hashlib
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
@@ -53,6 +54,59 @@ class TileSaver:
         self.output_size = output_size
         self.image_format = image_format.upper()
 
+    def _validate_grid_info(self, grid_info: Dict[str, Any]) -> None:
+        """Validate that grid_info contains required keys"""
+        required_keys = ["x_edges", "y_edges"]
+        for key in required_keys:
+            if key not in grid_info:
+                raise ValueError(f"grid_info missing required key: {key}")
+            if not isinstance(grid_info[key], list) or len(grid_info[key]) < 2:
+                raise ValueError(
+                    f"grid_info[{key}] must be a list with at least 2 elements"
+                )
+
+    def _sanitize_filename(self, filename: str) -> str:
+        """Sanitize filename by removing/replacing problematic characters"""
+        if not filename:
+            return "unknown"
+
+        # Remove extension if present
+        name = Path(filename).stem
+
+        # Replace problematic characters for folder/file names
+        name = re.sub(r'[<>:"/\\|?*]', "_", name)
+
+        # Remove any remaining problematic characters
+        name = re.sub(r"[^\w\-_.]", "_", name)
+
+        # Limit length and ensure it's not empty
+        name = name[:50].strip("_.")
+
+        return name if name else "unknown"
+
+    def _get_stable_hash(self, text: str, length: int = 8) -> str:
+        """Get a stable hash that's consistent across Python processes"""
+        return hashlib.sha1(text.encode("utf-8")).hexdigest()[:length]
+
+    def _safe_rmtree(self, path: Path, base_path: Path) -> bool:
+        """Safely remove directory tree with validation"""
+        try:
+            # Ensure the path is under the base path (prevent path traversal)
+            resolved_path = path.resolve()
+            resolved_base = base_path.resolve()
+
+            if not str(resolved_path).startswith(str(resolved_base)):
+                logger.error(f"Refusing to delete path outside base directory: {path}")
+                return False
+
+            if resolved_path.exists():
+                shutil.rmtree(resolved_path)
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to remove directory {path}: {e}")
+            return False
+
     def save_tiles(
         self,
         source_image: Image.Image,
@@ -80,6 +134,19 @@ class TileSaver:
         Returns:
             ProcessingResult with information about what was saved or skipped
         """
+        # Validate inputs
+        try:
+            self._validate_grid_info(grid_info)
+        except ValueError as e:
+            logger.error(f"Invalid grid_info: {e}")
+            return ProcessingResult(
+                source_name="unknown",
+                output_folder=output_folder,
+                skipped=True,
+                skipped_reason=f"Invalid grid_info: {e}",
+                saved_tiles=[],
+            )
+
         if not placed_tiles:
             logger.warning("No tiles to save!")
             return ProcessingResult(
@@ -93,6 +160,7 @@ class TileSaver:
         # Extract source name and create subfolder
         source_name = self.extract_source_name(source_path_or_url)
         subfolder_path = Path(output_folder) / source_name
+        base_output_path = Path(output_folder)
 
         if debug:
             print(f"\n=== Tile Saving ===")
@@ -122,16 +190,25 @@ class TileSaver:
         if overwrite and subfolder_path.exists():
             if debug:
                 print(f"🗑️  Clearing existing folder due to overwrite=True")
-            shutil.rmtree(subfolder_path)
+            if not self._safe_rmtree(subfolder_path, base_output_path):
+                return ProcessingResult(
+                    source_name=source_name,
+                    output_folder=str(subfolder_path),
+                    skipped=True,
+                    skipped_reason="Failed to clear existing folder safely",
+                    saved_tiles=[],
+                )
 
         subfolder_path.mkdir(parents=True, exist_ok=True)
 
         if debug:
             print(f"💾 Saving {len(placed_tiles)} tiles to '{subfolder_path}'")
 
-        # Determine base filename
+        # Determine and sanitize base filename
         if base_filename is None:
             base_filename = source_name
+        else:
+            base_filename = self._sanitize_filename(base_filename)
 
         # Save tiles using existing logic
         saved_tiles = self._save_tiles_to_folder(
@@ -183,8 +260,8 @@ class TileSaver:
                         f"gdrive_{file_id[:16]}"  # Truncate for reasonable folder name
                     )
 
-            # Fallback for Google Drive URLs
-            return f"gdrive_{hash(source) % 100000:05d}"
+            # Fallback for Google Drive URLs without recognizable ID
+            return f"gdrive_{self._get_stable_hash(source)}"
 
         # Handle file paths (local or URL)
         try:
@@ -209,8 +286,8 @@ class TileSaver:
         except Exception as e:
             logger.warning(f"Could not extract name from source: {e}")
 
-        # Ultimate fallback
-        return f"source_{hash(source) % 100000:05d}"
+        # Ultimate fallback - use stable hash
+        return f"source_{self._get_stable_hash(source)}"
 
     def check_existing_work(self, output_folder: str) -> Dict[str, Any]:
         """
@@ -285,6 +362,11 @@ class TileSaver:
                     source_image, tile, x_edges, y_edges
                 )
 
+                # Prepare image for the target format (handle RGBA/JPEG issues)
+                tile_image = self._prepare_image_for_format(
+                    tile_image, self.image_format
+                )
+
                 # Save the image
                 tile_image.save(filepath, format=self.image_format)
 
@@ -334,6 +416,26 @@ class TileSaver:
         )
         return filename
 
+    def _prepare_image_for_format(
+        self, image: Image.Image, format_name: str
+    ) -> Image.Image:
+        """Prepare image for saving in the specified format"""
+        format_name = format_name.upper()
+
+        # Convert RGBA to RGB for JPEG format
+        if format_name in ("JPEG", "JPG") and image.mode in ("RGBA", "LA"):
+            # Create white background for transparency
+            background = Image.new("RGB", image.size, (255, 255, 255))
+            if image.mode == "RGBA":
+                background.paste(
+                    image, mask=image.split()[-1]
+                )  # Use alpha channel as mask
+            else:  # LA mode
+                background.paste(image, mask=image.split()[-1])
+            return background
+
+        return image
+
     def _extract_tile_image(
         self,
         source_image: Image.Image,
@@ -347,6 +449,17 @@ class TileSaver:
         This is similar to TileExtractor._create_tile_from_grid_coords but
         works with TilePlacement objects instead.
         """
+        # Validate bounds to prevent IndexError
+        if tile.start_col < 0 or tile.start_col + tile.size >= len(x_edges):
+            raise IndexError(
+                f"Tile column bounds ({tile.start_col} to {tile.start_col + tile.size}) exceed x_edges length ({len(x_edges)})"
+            )
+
+        if tile.start_row < 0 or tile.start_row + tile.size >= len(y_edges):
+            raise IndexError(
+                f"Tile row bounds ({tile.start_row} to {tile.start_row + tile.size}) exceed y_edges length ({len(y_edges)})"
+            )
+
         # Calculate pixel boundaries
         start_x = x_edges[tile.start_col]
         start_y = y_edges[tile.start_row]
@@ -365,28 +478,27 @@ class TileSaver:
 
     def get_save_stats(self, processing_result: ProcessingResult) -> Dict[str, Any]:
         """Get statistics about the save operation from ProcessingResult"""
+        # Base structure that all branches will return
+        stats = {
+            "source_name": processing_result.source_name,
+            "output_folder": processing_result.output_folder,
+            "skipped": processing_result.skipped,
+            "skipped_reason": processing_result.skipped_reason,
+            "tiles_saved": 0,
+            "failed_saves": 0,
+            "success_rate": 0.0,
+            "total_good_squares": 0,
+            "estimated_size_mb": 0.0,
+            "existing_files": 0,
+        }
+
         if processing_result.skipped:
-            return {
-                "source_name": processing_result.source_name,
-                "skipped": True,
-                "skipped_reason": processing_result.skipped_reason,
-                "existing_files": processing_result.total_files_found,
-                "tiles_saved": 0,
-                "success_rate": 0.0,
-                "total_good_squares": 0,
-                "estimated_size_mb": 0.0,
-            }
+            stats["existing_files"] = processing_result.total_files_found
+            return stats
 
         saved_tiles = processing_result.saved_tiles
         if not saved_tiles:
-            return {
-                "source_name": processing_result.source_name,
-                "skipped": False,
-                "tiles_saved": 0,
-                "success_rate": 0.0,
-                "total_good_squares": 0,
-                "estimated_size_mb": 0.0,
-            }
+            return stats
 
         successful_saves = sum(1 for info in saved_tiles if info.success)
         failed_saves = len(saved_tiles) - successful_saves
@@ -399,13 +511,15 @@ class TileSaver:
         # Estimate total file size (rough estimate)
         estimated_size_mb = successful_saves * 0.5  # Assume ~0.5MB per 512x512 PNG
 
-        return {
-            "source_name": processing_result.source_name,
-            "skipped": False,
-            "tiles_saved": successful_saves,
-            "failed_saves": failed_saves,
-            "success_rate": success_rate,
-            "total_good_squares": total_good_squares,
-            "estimated_size_mb": estimated_size_mb,
-            "output_folder": processing_result.output_folder,
-        }
+        # Update stats with actual values
+        stats.update(
+            {
+                "tiles_saved": successful_saves,
+                "failed_saves": failed_saves,
+                "success_rate": success_rate,
+                "total_good_squares": total_good_squares,
+                "estimated_size_mb": estimated_size_mb,
+            }
+        )
+
+        return stats

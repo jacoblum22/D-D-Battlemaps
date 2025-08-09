@@ -281,20 +281,25 @@ class BattlemapPipeline:
                     break
 
                 # Process single image
-                self._process_single_image(img_info)
+                success = self._process_single_image(img_info)
 
-                # Mark as processed
-                if self.progress.processed_images is None:
-                    self.progress.processed_images = []
-                self.progress.processed_images.append(img_info.path)
+                # Only mark as processed if successful
+                if success:
+                    if self.progress.processed_images is None:
+                        self.progress.processed_images = []
+                    self.progress.processed_images.append(img_info.path)
 
         except Exception as e:
             logger.error(f"Error processing source '{source}': {e}")
             if self.config.debug:
                 print(f"❌ Source processing error: {e}")
 
-    def _process_single_image(self, img_info: ImageInfo):
-        """Process a single image to generate tiles"""
+    def _process_single_image(self, img_info: ImageInfo) -> bool:
+        """Process a single image to generate tiles
+
+        Returns:
+            True if processing was successful, False otherwise
+        """
         if self.config.debug:
             print(f"\n🖼️  Processing: {img_info.filename}")
 
@@ -307,7 +312,7 @@ class BattlemapPipeline:
                 if self.config.debug:
                     print(f"❌ Failed to access image")
                 self.progress.stats.images_failed += 1
-                return
+                return False
 
             # Load the image
             try:
@@ -315,15 +320,30 @@ class BattlemapPipeline:
 
                 # Skip images with transparency (tokens, UI elements, etc.)
                 if pil_image.mode in ("RGBA", "LA") or "transparency" in pil_image.info:
-                    # Check if image actually has transparent pixels
+                    # Check if image actually has transparent pixels efficiently
+                    has_transparency = False
+
                     if pil_image.mode == "RGBA":
-                        img_array = np.array(pil_image)
-                        alpha_channel = img_array[:, :, 3]
-                        has_transparency = np.any(alpha_channel < 255)
+                        # Use PIL's getchannel instead of full numpy array
+                        alpha_channel = pil_image.getchannel("A")
+                        # Check for any non-opaque pixels efficiently
+                        extrema = alpha_channel.getextrema()
+                        min_alpha = (
+                            extrema[0] if isinstance(extrema, tuple) else extrema
+                        )
+                        has_transparency = (
+                            isinstance(min_alpha, (int, float)) and min_alpha < 255
+                        )
                     elif pil_image.mode == "LA":
-                        img_array = np.array(pil_image)
-                        alpha_channel = img_array[:, :, 1]
-                        has_transparency = np.any(alpha_channel < 255)
+                        # Use PIL's getchannel for L+Alpha mode
+                        alpha_channel = pil_image.getchannel("A")
+                        extrema = alpha_channel.getextrema()
+                        min_alpha = (
+                            extrema[0] if isinstance(extrema, tuple) else extrema
+                        )
+                        has_transparency = (
+                            isinstance(min_alpha, (int, float)) and min_alpha < 255
+                        )
                     else:
                         has_transparency = True  # Has transparency info
 
@@ -333,21 +353,20 @@ class BattlemapPipeline:
                                 f"⏭️ Image has transparent parts - skipping analysis (likely token or UI element)"
                             )
                         self.progress.stats.images_skipped += 1
-                        return
+                        return False
 
                 # Convert to RGB for processing
                 pil_image = pil_image.convert("RGB")
-                image_array = np.array(pil_image)
             except Exception as e:
                 if self.config.debug:
                     print(f"❌ Failed to load image: {e}")
                 self.progress.stats.images_failed += 1
-                return
+                return False
 
             if self.config.debug:
-                print(
-                    f"📐 Image size: {image_array.shape[1]}x{image_array.shape[0]} pixels"
-                )
+                # Get image dimensions efficiently without numpy conversion
+                width, height = pil_image.size
+                print(f"📐 Image size: {width}x{height} pixels")
 
             # Detect grid dimensions
             grid_info = self.grid_detector.detect_grid_with_filename_fallback(
@@ -358,7 +377,7 @@ class BattlemapPipeline:
                 if self.config.debug:
                     print(f"⚠️  Could not detect grid - skipping image")
                 self.progress.stats.images_skipped += 1
-                return
+                return False
 
             if self.config.debug:
                 print(f"🔲 Grid detected: {grid_info['nx']}x{grid_info['ny']} squares")
@@ -390,7 +409,7 @@ class BattlemapPipeline:
                 if self.config.debug:
                     print(f"⚠️  No suitable tile positions found - skipping image")
                 self.progress.stats.images_skipped += 1
-                return
+                return False
 
             # Create output subfolder for this image
             image_name = Path(img_info.filename).stem
@@ -420,19 +439,24 @@ class BattlemapPipeline:
                 )
 
             # Clean up temporary file if it was downloaded
-            if image_path != img_info.path and image_path.startswith(
-                self.image_handler.temp_dir
+            if (
+                image_path != img_info.path
+                and self.image_handler.temp_dir  # Check temp_dir is not None
+                and image_path.startswith(self.image_handler.temp_dir)
             ):
                 try:
                     os.remove(image_path)
                 except:
                     pass  # Ignore cleanup errors
 
+            return True  # Success
+
         except Exception as e:
             logger.error(f"Error processing image {img_info.filename}: {e}")
             if self.config.debug:
                 print(f"❌ Image processing error: {e}")
             self.progress.stats.images_failed += 1
+            return False  # Failure
 
     def _save_progress(self):
         """Save current progress to file"""

@@ -10,11 +10,15 @@ This module provides Google Drive API integration to properly handle:
 
 import os
 import pickle
+import json
+import stat
 import logging
 from typing import List, Optional, Dict, Any, Union
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google.auth.credentials import Credentials as BaseCredentials
 from googleapiclient.http import MediaIoBaseDownload
 import io
 from pathlib import Path
@@ -22,8 +26,11 @@ from pathlib import Path
 # Set up logging
 logger = logging.getLogger(__name__)
 
-# Scopes needed for Google Drive access (includes delete permission)
-SCOPES = ["https://www.googleapis.com/auth/drive"]
+# Scopes needed for Google Drive access (read-only for security)
+# For read-only access: use drive.readonly
+# For file-specific access: use drive.file
+# For full access: use drive (avoid unless necessary)
+SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 
 
 class GoogleDriveHandler:
@@ -34,27 +41,105 @@ class GoogleDriveHandler:
     def __init__(
         self,
         credentials_file: str = "google_drive_credentials.json",
-        token_file: str = "google_drive_token.pickle",
+        token_file: str = "google_drive_token.json",  # Changed from .pickle to .json
+        lazy_auth: bool = True,
     ):
         self.credentials_file = credentials_file
         self.token_file = token_file
         self.service: Optional[Any] = None
-        self._authenticate()
+        self._authenticated = False
+
+        # Defer authentication unless explicitly requested
+        if not lazy_auth:
+            self._authenticate()
+
+    def _ensure_authenticated(self):
+        """Ensure we're authenticated before making API calls"""
+        if not self._authenticated:
+            self._authenticate()
+
+    def _save_credentials_securely(self, creds: Any) -> None:
+        """Save credentials to JSON with secure file permissions"""
+        try:
+            # Convert credentials to JSON
+            creds_data = {
+                "token": creds.token,
+                "refresh_token": creds.refresh_token,
+                "token_uri": creds.token_uri,
+                "client_id": creds.client_id,
+                "client_secret": creds.client_secret,
+                "scopes": creds.scopes,
+            }
+
+            # Write to file with secure permissions
+            with open(self.token_file, "w") as token_file:
+                json.dump(creds_data, token_file, indent=2)
+
+            # Set restrictive permissions (owner read/write only)
+            os.chmod(self.token_file, stat.S_IRUSR | stat.S_IWUSR)
+            logger.info(f"Credentials saved securely to {self.token_file}")
+
+        except Exception as e:
+            logger.error(f"Failed to save credentials: {e}")
+            raise
+
+    def _load_credentials_from_json(self) -> Optional[Credentials]:
+        """Load credentials from JSON file"""
+        try:
+            with open(self.token_file, "r") as token_file:
+                creds_data = json.load(token_file)
+
+            return Credentials.from_authorized_user_info(creds_data, SCOPES)
+
+        except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
+            logger.debug(f"Could not load credentials from JSON: {e}")
+            return None
+
+    def _migrate_pickle_to_json(self) -> Optional[Credentials]:
+        """Migrate old pickle token file to secure JSON format"""
+        pickle_file = self.token_file.replace(".json", ".pickle")
+
+        if not os.path.exists(pickle_file):
+            return None
+
+        logger.info("Migrating old pickle token file to secure JSON format...")
+
+        try:
+            # Load from pickle (last time!)
+            with open(pickle_file, "rb") as token:
+                creds = pickle.load(token)
+
+            # Save in new format
+            self._save_credentials_securely(creds)
+
+            # Remove old pickle file
+            os.remove(pickle_file)
+            logger.info("Migration completed successfully")
+
+            return creds
+
+        except Exception as e:
+            logger.warning(f"Failed to migrate pickle token file: {e}")
+            return None
 
     def _authenticate(self):
-        """Authenticate with Google Drive API"""
+        """Authenticate with Google Drive API using secure JSON token storage"""
         creds = None
 
-        # Load existing token if available
-        if os.path.exists(self.token_file):
-            with open(self.token_file, "rb") as token:
-                creds = pickle.load(token)
+        # Try to load existing token from JSON
+        creds = self._load_credentials_from_json()
+
+        # If no JSON token, try migrating from old pickle format
+        if not creds:
+            creds = self._migrate_pickle_to_json()
 
         # If no valid credentials, get new ones
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 try:
                     creds.refresh(Request())
+                    # Save refreshed credentials
+                    self._save_credentials_securely(creds)
                 except Exception as e:
                     logger.warning(f"Failed to refresh token: {e}")
                     creds = None
@@ -71,12 +156,12 @@ class GoogleDriveHandler:
                 )
                 creds = flow.run_local_server(port=0)
 
-            # Save credentials for next run
-            with open(self.token_file, "wb") as token:
-                pickle.dump(creds, token)
+                # Save new credentials securely
+                self._save_credentials_securely(creds)
 
         # Build the service
         self.service = build("drive", "v3", credentials=creds)
+        self._authenticated = True
         logger.info("Google Drive API authenticated successfully")
 
     def extract_file_id(self, url: str) -> Optional[str]:
@@ -99,6 +184,8 @@ class GoogleDriveHandler:
 
     def get_file_info(self, file_id: str) -> Dict[str, Any]:
         """Get information about a file or folder"""
+        self._ensure_authenticated()
+
         if not self.service:
             raise RuntimeError("Google Drive service not initialized")
 
@@ -125,6 +212,7 @@ class GoogleDriveHandler:
         self, folder_id: str, recursive: bool = True
     ) -> List[Dict[str, Any]]:
         """List all image files in a folder"""
+        self._ensure_authenticated()
         images = []
 
         # Image MIME types to look for
@@ -200,6 +288,8 @@ class GoogleDriveHandler:
 
     def download_file(self, file_id: str, destination: str) -> bool:
         """Download a file from Google Drive"""
+        self._ensure_authenticated()
+
         if not self.service:
             raise RuntimeError("Google Drive service not initialized")
 
@@ -209,8 +299,10 @@ class GoogleDriveHandler:
             if not file_info:
                 return False
 
-            # Create directory if needed
-            os.makedirs(os.path.dirname(destination), exist_ok=True)
+            # Create directory if needed - handle bare filenames safely
+            dest_dir = os.path.dirname(destination)
+            if dest_dir:  # Only create directory if there's actually a directory part
+                os.makedirs(dest_dir, exist_ok=True)
 
             # Download the file
             request = self.service.files().get_media(fileId=file_id)  # type: ignore
@@ -234,6 +326,12 @@ class GoogleDriveHandler:
 
     def test_connection(self) -> bool:
         """Test if the Google Drive connection is working"""
+        try:
+            self._ensure_authenticated()
+        except Exception as e:
+            logger.error(f"Authentication failed: {e}")
+            return False
+
         if not self.service:
             logger.error("Google Drive service not initialized")
             return False
@@ -251,24 +349,12 @@ class GoogleDriveHandler:
             return False
 
     def delete_file(self, file_id: str) -> bool:
-        """Delete a file from Google Drive"""
-        if not self.service:
-            logger.error("Google Drive service not initialized")
-            return False
-
-        try:
-            # Get file info for logging
-            file_info = self.get_file_info(file_id)
-            file_name = file_info.get("name", "Unknown") if file_info else "Unknown"
-
-            # Delete the file
-            self.service.files().delete(fileId=file_id).execute()  # type: ignore
-            logger.info(f"Successfully deleted file: {file_name}")
-            return True
-
-        except Exception as e:
-            logger.error(f"Failed to delete file {file_id}: {e}")
-            return False
+        """Delete a file from Google Drive - DISABLED in read-only mode"""
+        logger.warning("Delete operation not available in read-only mode")
+        logger.info(
+            "To enable delete operations, change SCOPES to include 'drive' instead of 'drive.readonly'"
+        )
+        return False
 
 
 def test_google_drive_handler():

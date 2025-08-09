@@ -6,9 +6,13 @@ which may be less suitable for training tile generation.
 """
 
 import cv2
+import logging
 import numpy as np
 from typing import Tuple, Dict, Any
 from pathlib import Path
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 
 class BlurDetector:
@@ -75,12 +79,21 @@ class BlurDetector:
                 "is_sharp_edges": is_sharp_edges,
                 "is_sharp": is_sharp,
                 "laplacian_threshold": self.laplacian_threshold,
-                "edge_threshold": self.edge_density_threshold,
+                "edge_density_threshold": self.edge_density_threshold,
                 "image_shape": img.shape,
             }
 
-        except Exception as e:
+        except (cv2.error, OSError) as e:
+            # Log specific expected errors with stack trace
+            logger.error(f"Error analyzing image {image_path}: {str(e)}", exc_info=True)
             return {"error": f"Error analyzing image: {str(e)}", "is_sharp": False}
+        except Exception as e:
+            # Log unexpected errors and re-raise for debugging
+            logger.critical(
+                f"Unexpected error analyzing image {image_path}: {str(e)}",
+                exc_info=True,
+            )
+            raise
 
     def is_blurred_floor(self, image_path: str) -> Tuple[bool, str]:
         """
