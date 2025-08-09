@@ -3,12 +3,19 @@ Grid Detection for D&D Battlemap images
 
 Based on morphological blackhat operations to detect grid lines.
 Uses the approach from the original code which works very well.
+Now includes filename parsing to extract grid dimensions from image names.
 """
 
 import numpy as np
 import cv2
+import re
+import logging
 from typing import Optional, Dict, Tuple, List
 from PIL import Image
+from pathlib import Path
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 
 class GridDetector:
@@ -38,16 +45,109 @@ class GridDetector:
 
         return kernel_size
 
-    def detect_grid(self, pil_img: Image.Image) -> Optional[Dict]:
+    def extract_dimensions_from_filename(
+        self, filename: str
+    ) -> Optional[Tuple[int, int]]:
+        """
+        Extract grid dimensions from filename
+
+        Supports formats like:
+        - (10x10), [15x20], {12x12}
+        - 10x10, 15x20, 12x12 (standalone)
+        - Map_10x10_Dungeon.jpg
+        - [Battle Map 15x20].png
+        - dungeon(12x12).webp
+
+        Args:
+            filename: The filename to parse
+
+        Returns:
+            Tuple of (width, height) if found, None otherwise
+        """
+        if not filename:
+            return None
+
+        # Remove file extension for cleaner parsing
+        name_without_ext = Path(filename).stem
+
+        # Pattern to match grid dimensions in various formats
+        patterns = [
+            # Parentheses: (10x10), (15x20)
+            r"\((\d+)[x×](\d+)\)",
+            # Square brackets: [10x10], [15x20]
+            r"\[(\d+)[x×](\d+)\]",
+            # Curly braces: {10x10}, {15x20}
+            r"\{(\d+)[x×](\d+)\}",
+            # Underscores: Map_10x10_File, Forest_20x25_Night, Map_10x10.jpg
+            r"_(\d+)[x×](\d+)(?:_|$)",
+            # Standalone: 10x10, 15x20 (with word boundaries)
+            r"\b(\d+)[x×](\d+)\b",
+            # With spaces: 10 x 10, 15 x 20
+            r"\b(\d+)\s*[x×]\s*(\d+)\b",
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, name_without_ext, re.IGNORECASE)
+            if match:
+                try:
+                    width = int(match.group(1))
+                    height = int(match.group(2))
+                    # Sanity check - reasonable grid sizes
+                    if 1 <= width <= 100 and 1 <= height <= 100:
+                        return (width, height)
+                except (ValueError, IndexError):
+                    continue
+
+        return None
+
+    def _validate_filename_dimensions(
+        self,
+        detected_grid: Dict,
+        filename_dims: Tuple[int, int],
+        tolerance: float = 0.1,
+    ) -> bool:
+        """
+        Validate if detected grid matches filename dimensions within tolerance
+
+        Args:
+            detected_grid: Grid detection results
+            filename_dims: Dimensions from filename (width, height)
+            tolerance: Tolerance for matching (0.1 = 10%)
+
+        Returns:
+            True if dimensions match within tolerance
+        """
+        if not detected_grid or not filename_dims:
+            return False
+
+        detected_nx = detected_grid.get("nx", 0)
+        detected_ny = detected_grid.get("ny", 0)
+        filename_w, filename_h = filename_dims
+
+        # Calculate tolerance
+        w_tolerance = max(1, int(filename_w * tolerance))
+        h_tolerance = max(1, int(filename_h * tolerance))
+
+        # Check if detected dimensions are within tolerance of filename dimensions
+        w_match = abs(detected_nx - filename_w) <= w_tolerance
+        h_match = abs(detected_ny - filename_h) <= h_tolerance
+
+        return w_match and h_match
+
+    def detect_grid(
+        self, pil_img: Image.Image, filename: Optional[str] = None
+    ) -> Optional[Dict]:
         """
         Detect grid structure in a battlemap image
 
         Args:
             pil_img: PIL Image in RGB format
+            filename: Optional filename to extract dimensions from
 
         Returns:
             Dict with grid info if detected, None otherwise
-            Dict contains: nx, ny, cell_width, cell_height, x_edges, y_edges
+            Dict contains: nx, ny, cell_width, cell_height, x_edges, y_edges,
+                          filename_dimensions (if found), filename_match (if applicable)
         """
         # Convert to grayscale
         rgb_array = np.array(pil_img)
@@ -55,6 +155,15 @@ class GridDetector:
             gray = cv2.cvtColor(rgb_array, cv2.COLOR_RGB2GRAY)
         else:
             gray = rgb_array
+
+        # Extract dimensions from filename if provided
+        filename_dims = None
+        if filename:
+            filename_dims = self.extract_dimensions_from_filename(filename)
+            if filename_dims:
+                logger.debug(
+                    f"📏 Found dimensions in filename '{filename}': {filename_dims[0]}x{filename_dims[1]}"
+                )
 
         H, W = gray.shape
 
@@ -112,7 +221,8 @@ class GridDetector:
         x_edges = self._generate_grid_edges(W, nx)
         y_edges = self._generate_grid_edges(H, ny)
 
-        return {
+        # Create result dictionary
+        result = {
             "nx": nx,
             "ny": ny,
             "cell_width": cell_width,
@@ -122,6 +232,85 @@ class GridDetector:
             "score": raw_score,
             "size_px": best_size,
         }
+
+        # Add filename information if available
+        if filename_dims:
+            result["filename_dimensions"] = filename_dims
+            result["filename_match"] = self._validate_filename_dimensions(
+                result, filename_dims
+            )
+            if result["filename_match"]:
+                print(
+                    f"✅ Detected grid {nx}x{ny} matches filename dimensions {filename_dims[0]}x{filename_dims[1]}"
+                )
+            else:
+                print(
+                    f"⚠️  Detected grid {nx}x{ny} differs from filename dimensions {filename_dims[0]}x{filename_dims[1]}"
+                )
+        else:
+            result["filename_dimensions"] = None
+            result["filename_match"] = None
+
+        return result
+
+    def detect_grid_with_filename_fallback(
+        self, pil_img: Image.Image, filename: Optional[str] = None
+    ) -> Optional[Dict]:
+        """
+        Detect grid with filename fallback support
+
+        First tries visual detection, then falls back to filename dimensions if visual detection fails
+        but filename contains valid dimensions.
+
+        Args:
+            pil_img: PIL Image in RGB format
+            filename: Optional filename to extract dimensions from
+
+        Returns:
+            Dict with grid info, using filename as fallback if needed
+        """
+        # Try visual detection first
+        result = self.detect_grid(pil_img, filename)
+
+        # If visual detection succeeded, return it
+        if result:
+            return result
+
+        # If visual detection failed but we have filename dimensions, create fallback result
+        if filename:
+            filename_dims = self.extract_dimensions_from_filename(filename)
+            if filename_dims:
+                print(
+                    f"🔄 Visual grid detection failed, using filename dimensions: {filename_dims[0]}x{filename_dims[1]}"
+                )
+
+                # Calculate estimated cell dimensions based on image size
+                H, W = pil_img.height, pil_img.width
+                nx, ny = filename_dims
+
+                cell_width = W / float(nx)
+                cell_height = H / float(ny)
+
+                # Generate estimated grid edges
+                x_edges = self._generate_grid_edges(W, nx)
+                y_edges = self._generate_grid_edges(H, ny)
+
+                return {
+                    "nx": nx,
+                    "ny": ny,
+                    "cell_width": cell_width,
+                    "cell_height": cell_height,
+                    "x_edges": x_edges,
+                    "y_edges": y_edges,
+                    "score": 0.0,  # No visual detection score
+                    "size_px": None,
+                    "filename_dimensions": filename_dims,
+                    "filename_match": True,  # This is derived from filename
+                    "detection_method": "filename_fallback",
+                }
+
+        # Both visual and filename detection failed
+        return None
 
     def _create_blackhat_maps(self, gray: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """Create morphological blackhat maps to highlight grid lines"""

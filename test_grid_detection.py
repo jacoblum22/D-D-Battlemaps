@@ -34,7 +34,20 @@ def test_grid_detection(image_path, generate_tiles=True):
     # Test grid detection
     detector = GridDetector()
     print("Running grid detection...")
-    grid_info = detector.detect_grid(img)
+
+    # Extract filename for dimension detection
+    filename = os.path.basename(image_path)
+    print(f"Filename: {filename}")
+
+    # Test filename dimension extraction
+    filename_dims = detector.extract_dimensions_from_filename(filename)
+    if filename_dims:
+        print(f"📏 Dimensions found in filename: {filename_dims[0]}x{filename_dims[1]}")
+    else:
+        print("📏 No dimensions found in filename")
+
+    # Run detection with filename
+    grid_info = detector.detect_grid(img, filename)
 
     if grid_info:
         print("✓ Grid detected!")
@@ -44,6 +57,15 @@ def test_grid_detection(image_path, generate_tiles=True):
         )
         print(f"  Detection score: {grid_info['score']:.3f}")
         print(f"  Estimated cell size: {grid_info['size_px']} pixels")
+
+        # Show filename information if available
+        if grid_info.get("filename_dimensions"):
+            print(
+                f"  Filename dimensions: {grid_info['filename_dimensions'][0]}x{grid_info['filename_dimensions'][1]}"
+            )
+            print(
+                f"  Filename match: {'✅ Yes' if grid_info['filename_match'] else '❌ No'}"
+            )
 
         # Test tile extraction only if requested
         if generate_tiles:
