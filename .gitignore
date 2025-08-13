@@ -102,3 +102,34 @@ google_drive_credentials.json
 google_drive_token.json
 google_drive_token.pickle
 client_secret*.json
+
+# Environment variables and API keys
+.env
+.env.local
+*.key
+openai_api_key.txt
+
+# Dataset and training artifacts (large files)
+dataset_v1/
+dataset_v1_complete.zip
+dataset_v1_archive/
+
+# Model training outputs
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+model_checkpoints/
+lora_outputs/
+training_outputs/
+validation_outputs/
+
+# Training logs and metrics
+logs/
+wandb/
+tensorboard_logs/
+training_logs/
+
+# Fine-tuning temporary files
+*_splits.txt
+*_training_cache/
