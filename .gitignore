@@ -82,6 +82,10 @@ test_images/*.jpeg
 *.temp
 temp/
 tmp/
+# Package and processing logs
+package_*.log
+*_processing.log
+*_dataset.log
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -113,6 +117,30 @@ openai_api_key.txt
 dataset_v1/
 dataset_v1_complete.zip
 dataset_v1_archive/
+dataset_holdout_extra/
+dataset_v1_training/
+# Dataset zip files with timestamps or versioning
+*_dataset_*.zip
+dnd_battlemaps_lora_dataset_*.zip
+*.zip
+# Dataset split files
+train.txt
+val.txt
+test.txt
+# Training data files
+*_captions.txt
+*_captions/
+training_captions/
+# Generated validation and prompt files
+validation_prompts.txt
+*_prompts.txt
+# Packaging and preparation scripts outputs
+create_dataset_split*.py
+create_final_dataset_split.py
+move_extra_images.py
+find_missing_captions.py
+build_training_captions*.py
+package_dataset.py
 
 # Model training outputs
 *.safetensors
@@ -123,6 +151,10 @@ model_checkpoints/
 lora_outputs/
 training_outputs/
 validation_outputs/
+# Training configuration files
+kohya_training_config.toml
+*_training_config.toml
+*.toml
 
 # Training logs and metrics
 logs/
@@ -133,3 +165,9 @@ training_logs/
 # Fine-tuning temporary files
 *_splits.txt
 *_training_cache/
+
+# Generated comparison and output images
+comparison_images/
+generated_comparison_*/
+output_samples/
+sample_generations/
