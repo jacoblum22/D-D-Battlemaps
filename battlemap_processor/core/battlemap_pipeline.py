@@ -191,19 +191,133 @@ class BattlemapPipeline:
                         f"   Starting from source index: {self.progress.current_source_index}"
                     )
 
-            # Process each source
-            for source_idx in range(
-                self.progress.current_source_index, len(self.config.sources)
-            ):
-                source = self.config.sources[source_idx]
-                self.progress.current_source_index = source_idx
+            # First pass: collect all images from all sources
+            if self.config.debug:
+                print(f"\n📂 Collecting images from all sources...")
 
+            all_images = []
+            for source_idx, source in enumerate(self.config.sources):
                 if self.config.debug:
                     print(
-                        f"\n📂 Processing source {source_idx + 1}/{len(self.config.sources)}: {source}"
+                        f"\n📁 Finding images in source {source_idx + 1}/{len(self.config.sources)}: {source}"
                     )
 
-                # Check if we've hit the image limit
+                try:
+                    # Find images in source (list-only mode for efficiency)
+                    images = self.image_handler.find_images_from_source(
+                        source=source,
+                        debug=self.config.debug,
+                        list_only=True,
+                        use_smart_selection=self.config.use_smart_selection,
+                    )
+
+                    if images:
+                        all_images.extend(images)
+                        if self.config.debug:
+                            print(f"  📊 Found {len(images)} images")
+                    else:
+                        if self.config.debug:
+                            print(f"  ⚠️  No images found")
+
+                except Exception as e:
+                    logger.error(f"Error finding images in source '{source}': {e}")
+                    if self.config.debug:
+                        print(f"  ❌ Error: {e}")
+
+            if not all_images:
+                if self.config.debug:
+                    print("⚠️  No images found in any source")
+                return self.progress.stats
+
+            self.progress.stats.images_found = len(all_images)
+
+            if self.config.debug:
+                print(f"\n📊 Total images found: {len(all_images)}")
+
+            # Deduplicate images based on file content
+            if len(all_images) > 1:
+                if self.config.debug:
+                    print(f"\n🔍 Checking for duplicate images...")
+
+                from .duplicate_detector import DuplicateDetector
+
+                duplicate_detector = DuplicateDetector(
+                    output_dir=str(self.output_dir), debug=self.config.debug
+                )
+
+                unique_images, image_duplicates = duplicate_detector.deduplicate_images(
+                    all_images, self.config.temp_dir or self.image_handler.temp_dir
+                )
+
+                if image_duplicates:
+                    total_duplicates = sum(
+                        len(dup.duplicate_paths) for dup in image_duplicates
+                    )
+                    if self.config.debug:
+                        print(
+                            f"🔄 Found {total_duplicates} duplicate images in {len(image_duplicates)} groups"
+                        )
+                        for dup in image_duplicates[
+                            :5
+                        ]:  # Show first 5 duplicate groups
+                            original_name = Path(dup.original_path).name
+                            dup_names = [
+                                Path(p).name for p in dup.duplicate_paths[:3]
+                            ]  # Show first 3 duplicates
+                            more_text = (
+                                f" + {len(dup.duplicate_paths) - 3} more"
+                                if len(dup.duplicate_paths) > 3
+                                else ""
+                            )
+                            print(
+                                f"  📁 {original_name} duplicated by: {', '.join(dup_names)}{more_text}"
+                            )
+
+                        if len(image_duplicates) > 5:
+                            print(
+                                f"  ... and {len(image_duplicates) - 5} more duplicate groups"
+                            )
+
+                    # Save duplicate report
+                    duplicate_report = duplicate_detector.get_duplicate_report(
+                        [], image_duplicates
+                    )
+                    duplicate_report_file = self.output_dir / "duplicate_report.json"
+                    with open(duplicate_report_file, "w") as f:
+                        json.dump(duplicate_report, f, indent=2)
+
+                    if self.config.debug:
+                        print(f"📄 Duplicate report saved to: {duplicate_report_file}")
+
+                all_images = unique_images
+
+                if self.config.debug:
+                    print(f"✅ Using {len(all_images)} unique images for processing")
+            else:
+                if self.config.debug:
+                    print("ℹ️  Only one image found, skipping duplicate detection")
+
+            # Apply image limit if configured
+            if self.config.max_images and len(all_images) > self.config.max_images:
+                if self.config.debug:
+                    print(
+                        f"🔢 Limiting to {self.config.max_images} images (out of {len(all_images)})"
+                    )
+                all_images = all_images[: self.config.max_images]
+
+            # Process images
+            if self.config.debug:
+                print(f"\n🚀 Processing {len(all_images)} images...")
+
+            for image_info in all_images:
+                # Check if already processed
+                processed_list = self.progress.processed_images or []
+                if image_info.path in processed_list:
+                    if self.config.debug:
+                        print(f"⏭️  Skipping already processed: {image_info.filename}")
+                    continue
+
+                # Check if we've hit the image limit (shouldn't happen due to earlier limit, but safety check)
                 if (
                     self.config.max_images
                     and self.progress.stats.images_processed >= self.config.max_images
@@ -214,10 +328,20 @@ class BattlemapPipeline:
                         )
                     break
 
-                self._process_source(source)
+                # Process single image
+                success = self._process_single_image(image_info)
 
-                # Save progress after each source
-                if self.config.save_progress:
+                # Only mark as processed if successful
+                if success:
+                    if self.progress.processed_images is None:
+                        self.progress.processed_images = []
+                    self.progress.processed_images.append(image_info.path)
+
+                # Save progress periodically
+                if (
+                    self.config.save_progress
+                    and self.progress.stats.images_processed % 10 == 0
+                ):
                     self._save_progress()
 
             self.progress.stats.end_time = datetime.now()
@@ -238,62 +362,13 @@ class BattlemapPipeline:
             self.image_handler.cleanup_temp_files(debug=self.config.debug)
 
     def _process_source(self, source: str):
-        """Process a single source (Google Drive, zip, local directory)"""
-        try:
-            if self.config.debug:
-                print(f"🔍 Finding images in source...")
-
-            # Find images in source
-            images = self.image_handler.find_images_from_source(
-                source=source,
-                debug=self.config.debug,
-                list_only=True,  # Memory efficient - list first
-                use_smart_selection=self.config.use_smart_selection,
-            )
-
-            if not images:
-                if self.config.debug:
-                    print(f"⚠️  No images found in source")
-                return
-
-            self.progress.stats.images_found += len(images)
-
-            if self.config.debug:
-                print(f"📊 Found {len(images)} images to process")
-
-            # Process each image individually
-            for img_info in images:
-                # Check if already processed
-                processed_list = self.progress.processed_images or []
-                if img_info.path in processed_list:
-                    if self.config.debug:
-                        print(f"⏭️  Skipping already processed: {img_info.filename}")
-                    continue
-
-                # Check if we've hit the image limit
-                if (
-                    self.config.max_images
-                    and self.progress.stats.images_processed >= self.config.max_images
-                ):
-                    if self.config.debug:
-                        print(
-                            f"🛑 Reached maximum image limit ({self.config.max_images})"
-                        )
-                    break
-
-                # Process single image
-                success = self._process_single_image(img_info)
-
-                # Only mark as processed if successful
-                if success:
-                    if self.progress.processed_images is None:
-                        self.progress.processed_images = []
-                    self.progress.processed_images.append(img_info.path)
-
-        except Exception as e:
-            logger.error(f"Error processing source '{source}': {e}")
-            if self.config.debug:
-                print(f"❌ Source processing error: {e}")
+        """
+        Legacy method - kept for compatibility but no longer used in the main pipeline.
+        The new pipeline approach processes all images after deduplication.
+        """
+        # This method is kept for compatibility but is no longer used
+        # The new pipeline collects all images first, deduplicates them, then processes
+        pass
 
     def _process_single_image(self, img_info: ImageInfo) -> bool:
         """Process a single image to generate tiles

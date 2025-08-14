@@ -155,6 +155,45 @@ def collect_sources() -> List[str]:
                 sources.append(source)
                 print(f"✅ Added: {source}")
 
+    # Check for duplicate sources after all sources are collected
+    if len(sources) > 1:
+        print("\n🔍 Checking for duplicate sources...")
+
+        # Import duplicate detector
+        from battlemap_processor.core.duplicate_detector import SourceDeduplicator
+
+        deduplicator = SourceDeduplicator(debug=True)
+        deduplicated_sources, duplicates = deduplicator.deduplicate_sources(sources)
+
+        if duplicates:
+            print(f"\n⚠️  Found {len(duplicates)} duplicate source groups:")
+            for dup in duplicates:
+                reason_map = {
+                    "same_gdrive_folder": "Same Google Drive folder",
+                    "same_gdrive_file": "Same Google Drive file",
+                    "same_url": "Same URL",
+                    "same_local_path": "Same local path",
+                }
+                reason = reason_map.get(dup.reason, dup.reason)
+
+                print(f"\n  📁 {reason}:")
+                print(f"     Keeping: {dup.original_path}")
+                for dup_path in dup.duplicate_paths:
+                    print(f"     Removing: {dup_path}")
+
+            use_deduplicated = get_yes_no(
+                f"\nRemove {sum(len(dup.duplicate_paths) for dup in duplicates)} duplicate sources?",
+                default=True,
+            )
+
+            if use_deduplicated:
+                sources = deduplicated_sources
+                print(f"✅ Using {len(sources)} unique sources")
+            else:
+                print("❌ Keeping all sources including duplicates")
+        else:
+            print("✅ No duplicate sources detected")
+
     return sources
 
 

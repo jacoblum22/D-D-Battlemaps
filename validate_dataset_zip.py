@@ -95,10 +95,12 @@ def main(zip_path):
         try:
             with z.open(f"{split}.txt") as f:
                 files = [l.decode("utf-8").strip() for l in f if l.strip()]
-                # Extract just the filename from full path
-                split_lists[split] = set([f.split("/")[-1] for f in files])
+                # Store the ACTUAL entries from split files (don't transform them)
+                split_lists[split] = set(files)
+                # Also store just the filenames for comparison
+                split_filenames = set([f.split("/")[-1] for f in files])
                 print(
-                    f"📋 {split}.txt contains {len(files)} entries, {len(split_lists[split])} unique filenames"
+                    f"📋 {split}.txt contains {len(files)} entries, {len(split_filenames)} unique filenames"
                 )
         except KeyError:
             die(f"Could not read {split}.txt")
@@ -198,20 +200,69 @@ def main(zip_path):
                 f"{split}: {len(extra_caps)} captions without images (e.g., {extra_caps[:3]})"
             )
 
-        # Verify split lists align with actual images
+        # Enhanced filename matching check for split lists
+        print(f"\n🔍 Checking split file alignment for {split}...")
         if split_lists[split] is not None:
-            list_set = split_lists[split]
-            img_only = set(imgs_by_split[split]) - list_set
-            list_only = list_set - set(imgs_by_split[split])
+            # Get the actual entries from the split file
+            split_entries = split_lists[split]
+            # Extract just the filenames from the split entries (remove paths)
+            split_filenames = set([entry.split("/")[-1] for entry in split_entries])
 
-            if img_only:
-                problems.append(
-                    f"{split}: {len(img_only)} images not in {split}.txt (e.g., {list(img_only)[:3]})"
+            # Get the actual image filenames from the zip (these are the transformed names)
+            actual_img_files = set()
+            for name in names:
+                if name.startswith(f"images/{split}/") and RE_IMG.search(name):
+                    actual_filename = name.split("/")[-1]  # Just the filename
+                    actual_img_files.add(actual_filename)
+
+            # Compare split file filenames with actual packaged filenames
+            img_only = actual_img_files - split_filenames
+            split_only = split_filenames - actual_img_files
+
+            if img_only or split_only:
+                # Enhanced filename mismatch warning
+                print(f"⚠️  FILENAME MISMATCH WARNING for {split}:")
+                print(
+                    f"   Split file ({split}.txt) contains entries that don't match actual image filenames"
                 )
-            if list_only:
-                problems.append(
-                    f"{split}: {len(list_only)} entries in {split}.txt missing from images/ (e.g., {list(list_only)[:3]})"
+                print(
+                    f"   This usually means the split files weren't updated after filename transformations"
                 )
+
+                if img_only:
+                    problems.append(
+                        f"{split}: {len(img_only)} images not referenced in {split}.txt"
+                    )
+                    print(
+                        f"   📁 Images in folder but not referenced in {split}.txt: {len(img_only)}"
+                    )
+                    for example in list(img_only)[:3]:
+                        print(f"      • {example}")
+
+                if split_only:
+                    problems.append(
+                        f"{split}: {len(split_only)} entries in {split}.txt have no matching images"
+                    )
+                    print(
+                        f"   📝 Filenames in {split}.txt but no matching images: {len(split_only)}"
+                    )
+                    for example in list(split_only)[:3]:
+                        print(f"      • {example}")
+
+                # Show example comparison for debugging
+                print(f"\n   🔍 Example comparison:")
+                if split_entries:
+                    first_split_entry = list(split_entries)[0]
+                    print(f"   Split entry: {first_split_entry}")
+                if actual_img_files:
+                    first_actual = list(actual_img_files)[0]
+                    print(f"   Actual file: images/{split}/{first_actual}")
+
+                print(
+                    f"   💡 Fix: Ensure split files reference the transformed filenames used in the packaged dataset"
+                )
+            else:
+                print(f"✅ {split}: Split file entries match image filenames perfectly")
 
     # Caption content validation (sample files)
     print("\n🔍 VALIDATING CAPTION CONTENT...")
@@ -296,6 +347,7 @@ def main(zip_path):
         print("   • All images have matching captions")
         print("   • Caption format follows D&D battlemap standards")
         print("   • Configuration files are present and valid")
+        print("   • Split files match actual image filenames")
         print("\n🚀 Ready for RunPod upload!")
 
 

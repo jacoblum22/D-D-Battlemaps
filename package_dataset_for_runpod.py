@@ -314,6 +314,55 @@ def copy_split_files(base_path):
     return copied_split_files
 
 
+def create_corrected_split_files(base_path, splits_with_captions):
+    """Create corrected train.txt, val.txt, test.txt files with transformed filenames"""
+    logger.info("Creating corrected split files with transformed filenames...")
+
+    # Track processed filenames to match the deduplication in copy function
+    processed_filenames = set()
+    corrected_splits = {"train": [], "val": [], "test": []}
+
+    for split_name, image_caption_pairs in splits_with_captions.items():
+        for image_path, caption in image_caption_pairs:
+            source_path = Path(image_path)
+            original_filename = source_path.name
+
+            # Skip duplicates (same logic as copy function)
+            if image_path in processed_filenames:
+                continue
+
+            processed_filenames.add(image_path)
+
+            # Apply same filename transformation as in copy_images_and_create_captions
+            path_parts = image_path.replace("\\", "/").split("/")
+
+            if len(path_parts) >= 4:  # generated_images/map_folder/gdrive_id/file.png
+                map_folder = path_parts[1]
+                # Create unique filename: mapfolder_originalfilename
+                dest_filename = f"{map_folder}_{original_filename}"
+            else:
+                dest_filename = original_filename
+
+            corrected_splits[split_name].append(dest_filename)
+
+    # Write corrected split files
+    corrected_split_files = []
+    for split_name, filenames in corrected_splits.items():
+        split_file = f"{split_name}.txt"
+        dest_path = base_path / split_file
+
+        with open(dest_path, "w", encoding="utf-8") as f:
+            for filename in filenames:
+                f.write(f"{filename}\n")
+
+        corrected_split_files.append(split_file)
+        logger.info(
+            f"Created corrected {split_file} with {len(filenames)} transformed filenames"
+        )
+
+    return corrected_split_files
+
+
 def create_readme(base_path, splits_with_captions, stats, copied_files):
     """Create README with dataset information"""
     readme_content = f"""# D&D Battlemaps LoRA Training Dataset
@@ -432,8 +481,10 @@ def main():
         # Copy configuration files
         copied_files = copy_config_files(base_path)
 
-        # Copy split files
-        copied_split_files = copy_split_files(base_path)
+        # Create corrected split files with transformed filenames
+        corrected_split_files = create_corrected_split_files(
+            base_path, splits_with_captions
+        )
 
         # Create README
         create_readme(base_path, splits_with_captions, stats, copied_files)
