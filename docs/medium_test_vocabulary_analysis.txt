@@ -1,0 +1,114 @@
+=== VOCABULARY ANALYSIS REPORT ===
+
+Total images processed: 50
+Successful captions: 50
+Failed captions: 0
+Success rate: 100.0%
+
+=== COST ANALYSIS ===
+
+Total tokens used: 495,103
+Total cost: $0.0769
+Average cost per image: $0.0015
+Average tokens per image: 9902
+
+Cost projections:
+  100 images: $0.15
+  500 images: $0.77
+  1,000 images: $1.54
+  5,000 images: $7.69
+  10,000 images: $15.38
+
+=== VOCABULARY USAGE ===
+
+TERRAIN:
+  grassland: 13
+  path: 12
+  cave: 8
+  garden: 8
+  interior: 6
+  street: 5
+  river: 4
+  forest: 4
+  dungeon: 4
+  coastline: 3
+  snow: 2
+  ruins: 2
+  corridor: 1
+  cliffs: 1
+  sewer: 1
+  lake: 1
+
+FEATURES:
+  boulder: 25
+  bush: 25
+  tree: 23
+  pool: 11
+  barrel: 10
+  table: 10
+  wall: 9
+  debris: 7
+  crates: 7
+  bench: 6
+  roots: 4
+  crystals: 4
+  pond: 4
+  chair: 4
+  cart: 4
+  mushrooms: 3
+  bookshelf: 3
+  boat: 3
+  dock: 3
+  campfire: 2
+  torch: 2
+  rubble: 2
+  vines: 2
+  bones: 1
+  pit: 1
+  chasm: 1
+  window: 1
+  bed: 1
+  anvil: 1
+  cobweb: 1
+  stairs: 1
+  stump: 1
+  lantern: 1
+  fountain: 1
+  rail tracks: 1
+
+SCENE_TYPE:
+  wilderness: 21
+  clearing: 11
+  courtyard: 5
+  street: 2
+  workshop: 2
+  market: 2
+  road: 1
+  tavern: 1
+  inn: 1
+  dungeon: 1
+  mine: 1
+  study: 1
+  camp: 1
+
+=== OUT-OF-VOCABULARY ANALYSIS ===
+
+Total unique OOV terms: 11
+Total OOV occurrences: 13
+
+HIGH FREQUENCY OOV TERMS (consider adding to vocabulary):
+  pool (2)
+  house (2)
+
+ALL OOV TERMS (sorted by frequency):
+  pool: 2
+  house: 2
+  pathway: 1
+  building: 1
+  path: 1
+  bathtub: 1
+  light fixture: 1
+  water: 1
+  deck: 1
+  sail: 1
+  eye: 1

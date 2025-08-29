@@ -1,0 +1,225 @@
+=== VOCABULARY ANALYSIS REPORT ===
+
+Total entries analyzed: 5733
+Successfully processed: 5733
+
+EMPTY FIELDS:
+  extras: 3748 entries empty (65.4%)
+  terrain: 120 entries empty (2.1%)
+  features: 72 entries empty (1.3%)
+
+TERRAIN:
+  grassland: 1617 (28.2%)
+  path: 1040 (18.1%)
+  interior: 913 (15.9%)
+  forest: 842 (14.7%)
+  cave: 582 (10.2%)
+  dungeon: 554 (9.7%)
+  river: 511 (8.9%)
+  street: 437 (7.6%)
+  coastline: 350 (6.1%)
+  garden: 339 (5.9%)
+  cliffs: 236 (4.1%)
+  plaza: 170 (3.0%)
+  snow: 161 (2.8%)
+  ruins: 142 (2.5%)
+  desert: 128 (2.2%)
+  corridor: 104 (1.8%)
+  lake: 97 (1.7%)
+  swamp: 66 (1.2%)
+  ice: 61 (1.1%)
+  sewer: 29 (0.5%)
+  rooftop: 6 (0.1%)
+
+Total unique terrain types: 21
+
+FEATURES (top 30):
+  boulder: 3407 (59.4%)
+  bush: 2170 (37.9%)
+  tree: 2139 (37.3%)
+  barrel: 1255 (21.9%)
+  table: 1067 (18.6%)
+  pool: 906 (15.8%)
+  wall: 836 (14.6%)
+  debris: 525 (9.2%)
+  crates: 475 (8.3%)
+  chair: 459 (8.0%)
+  bench: 417 (7.3%)
+  cart: 370 (6.5%)
+  lantern: 353 (6.2%)
+  pond: 315 (5.5%)
+  desk: 292 (5.1%)
+  stairs: 291 (5.1%)
+  roots: 231 (4.0%)
+  dock: 222 (3.9%)
+  torch: 209 (3.6%)
+  crystals: 190 (3.3%)
+  stump: 188 (3.3%)
+  gear: 184 (3.2%)
+  chest: 171 (3.0%)
+  fountain: 169 (2.9%)
+  campfire: 169 (2.9%)
+  bridge: 162 (2.8%)
+  bed: 161 (2.8%)
+  cobweb: 144 (2.5%)
+  altar: 139 (2.4%)
+  bookshelf: 129 (2.3%)
+
+Total unique features: 71
+
+SCENE TYPES:
+  wilderness: 2929 (51.1%)
+  clearing: 1023 (17.8%)
+  street: 247 (4.3%)
+  tavern: 192 (3.3%)
+  inn: 179 (3.1%)
+  workshop: 173 (3.0%)
+  dungeon: 166 (2.9%)
+  courtyard: 151 (2.6%)
+  market: 146 (2.5%)
+  laboratory: 114 (2.0%)
+  road: 93 (1.6%)
+  camp: 77 (1.3%)
+  study: 74 (1.3%)
+  warehouse: 25 (0.4%)
+  kitchen: 23 (0.4%)
+  sewer: 23 (0.4%)
+  crypt: 22 (0.4%)
+  throne room: 21 (0.4%)
+  mine: 18 (0.3%)
+  tower: 16 (0.3%)
+  chapel: 9 (0.2%)
+  library: 6 (0.1%)
+  barracks: 4 (0.1%)
+  prison: 2 (0.0%)
+
+Total unique scene types: 24
+
+STYLES:
+  digital battlemap: 5733 (100.0%)
+
+EXTRAS (top 20):
+  water: 210 (3.7%)
+  pool: 195 (3.4%)
+  building: 179 (3.1%)
+  structure: 61 (1.1%)
+  grass: 61 (1.1%)
+  light: 57 (1.0%)
+  platform: 44 (0.8%)
+  cobblestone: 36 (0.6%)
+  lily pad: 31 (0.5%)
+  house: 30 (0.5%)
+  stream: 29 (0.5%)
+  plank: 28 (0.5%)
+  web: 27 (0.5%)
+  path: 26 (0.5%)
+  gravestone: 24 (0.4%)
+  grave: 24 (0.4%)
+  cliff: 23 (0.4%)
+  orb: 19 (0.3%)
+  cloud: 18 (0.3%)
+  floor: 17 (0.3%)
+
+Total unique extras: 594
+
+ATTRIBUTES:
+  COLOR:
+    green: 3219 (56.1%)
+    vibrant: 1464 (25.5%)
+    grey: 1094 (19.1%)
+    brown: 908 (15.8%)
+    blue: 826 (14.4%)
+    dark: 475 (8.3%)
+    earthy: 405 (7.1%)
+    colorful: 313 (5.5%)
+    red: 213 (3.7%)
+    white: 174 (3.0%)
+    Total unique color: 62
+
+  CONDITION:
+    scattered: 1907 (33.3%)
+    lush: 1388 (24.2%)
+    natural: 1181 (20.6%)
+    dense: 899 (15.7%)
+    well-maintained: 608 (10.6%)
+    rugged: 475 (8.3%)
+    overgrown: 446 (7.8%)
+    cracked: 442 (7.7%)
+    rocky: 359 (6.3%)
+    mysterious: 341 (5.9%)
+    Total unique condition: 227
+
+  DENSITY:
+    sparse: 2513 (43.8%)
+    crowded: 1273 (22.2%)
+    dense: 1121 (19.6%)
+    lush: 671 (11.7%)
+    narrow: 70 (1.2%)
+    busy: 49 (0.9%)
+    cozy: 42 (0.7%)
+    open: 28 (0.5%)
+    spacious: 26 (0.5%)
+    urban: 23 (0.4%)
+    Total unique density: 44
+
+  MATERIAL:
+    stone: 3207 (55.9%)
+    wood: 1009 (17.6%)
+    metal: 88 (1.5%)
+    molten: 87 (1.5%)
+    rock: 58 (1.0%)
+    cobblestone: 44 (0.8%)
+    lava: 11 (0.2%)
+    water: 7 (0.1%)
+    plastic: 7 (0.1%)
+    tile: 5 (0.1%)
+    Total unique material: 27
+
+  LIGHTING:
+    natural: 1954 (34.1%)
+    dim: 1860 (32.4%)
+    bright: 1281 (22.3%)
+    glowing: 856 (14.9%)
+    shadowy: 615 (10.7%)
+    warm: 358 (6.2%)
+    soft: 147 (2.6%)
+    illuminated: 126 (2.2%)
+    flickering: 115 (2.0%)
+    fiery: 107 (1.9%)
+    Total unique lighting: 54
+
+  COVERAGE:
+    roofed: 8 (0.1%)
+    Total unique coverage: 1
+
+RAW RESPONSE vs PROCESSED COMPARISON:
+
+Raw Response Terrain (top 15):
+  grassland: 1613 raw → 1617 processed
+  interior: 905 raw → 913 processed
+  forest: 842 raw → 842 processed
+  cave: 550 raw → 582 processed
+  river: 426 raw → 511 processed
+  street: 426 raw → 437 processed
+  coastline: 349 raw → 350 processed
+  cliffs: 212 raw → 236 processed
+  dungeon: 205 raw → 554 processed
+  lava: 195 raw → 0 processed (LOST 195)
+  snow: 156 raw → 161 processed
+  garden: 132 raw → 339 processed
+  desert: 128 raw → 128 processed
+  lake: 95 raw → 97 processed
+  swamp: 66 raw → 66 processed
+
+Terms only in raw responses (lost during processing):
+  courtyard: 1 (completely lost)
+  lava: 195 (completely lost)
+  pond: 3 (completely lost)
+  pool: 2 (completely lost)
+  rock: 4 (completely lost)
+  rocky: 3 (completely lost)
+  stone: 4 (completely lost)
+  water: 20 (completely lost)
+  waterfall: 5 (completely lost)
+  wilderness: 5 (completely lost)
+

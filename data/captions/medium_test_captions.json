@@ -1,0 +1,1498 @@
+[
+  {
+    "description": "A snowy landscape dotted with evergreen trees, featuring a winding path that leads to a circular gathering area with a central campfire.",
+    "terrain": [
+      "path",
+      "snow"
+    ],
+    "features": [
+      "campfire",
+      "tree"
+    ],
+    "scene_type": "clearing",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "white",
+        "green"
+      ],
+      "lighting": [
+        "dim"
+      ],
+      "density": [
+        "sparse"
+      ]
+    },
+    "image_path": "generated_images/Social Fun at the fair 70x60 (roofs, snow, day)/gdrive_09367e28/gdrive_09367e28_tile_010_pos_13_0_good_73_boring_49.3pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A snowy landscape dotted with evergreen trees, featuring a winding path that leads to a circular gathering area with a central campfire.\",\n  \"terrain\": [\"snow\"],\n  \"features\": [\"campfire\", \"path\", \"tree\"],\n  \"scene_type\": \"clearing\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"color\": [\"white\", \"green\"], \"lighting\": [\"dim\"], \"density\": [\"sparse\"]}\n}\n```"
+  },
+  {
+    "description": "A tangled wilderness area filled with vibrant foliage and peculiar glowing orbs, creating a mystical top-down battlemap scene.",
+    "terrain": [
+      "grassland"
+    ],
+    "features": [
+      "boulder",
+      "bush",
+      "mushrooms",
+      "roots"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [
+      "pathway"
+    ],
+    "attributes": {
+      "color": [
+        "vibrant",
+        "green",
+        "orange"
+      ],
+      "lighting": [
+        "glowing",
+        "glow"
+      ],
+      "density": [
+        "dense"
+      ]
+    },
+    "image_path": "generated_images/BaseDayGL_Watermark/gdrive_79141673/gdrive_79141673_tile_002_pos_0_38_good_144_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A tangled wilderness area filled with vibrant foliage and peculiar glowing orbs, creating a mystical top-down battlemap scene.\",\n  \"terrain\": [\"grassland\"],\n  \"features\": [\"boulder\", \"mushrooms\", \"plant\", \"roots\", \"stone pathway\"],\n  \"scene_type\": \"wilderness\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"color\": [\"vibrant\", \"green\", \"orange\"],\n    \"lighting\": [\"glowing\"],\n    \"density\": [\"dense\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A winding cave path is illuminated by glowing fungi, bordered by rocky walls and patches of foliage, creating an enchanting underground battlemap.",
+    "terrain": [
+      "cave",
+      "corridor"
+    ],
+    "features": [
+      "boulder",
+      "crystals",
+      "mushrooms",
+      "pool",
+      "roots"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "lighting": [
+        "glowing",
+        "bright",
+        "glow"
+      ],
+      "condition": [
+        "natural"
+      ],
+      "color": [
+        "green",
+        "blue"
+      ]
+    },
+    "image_path": "generated_images/Social (no grid ready) Small Underwater Dungeon (Fishies) 40x45/gdrive_09367e28/gdrive_09367e28_tile_001_pos_0_16_good_136_boring_5.6pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A winding cave path is illuminated by glowing fungi, bordered by rocky walls and patches of foliage, creating an enchanting underground battlemap.\",\n  \"terrain\": [\"cave\"],\n  \"features\": [\"boulder\", \"crystals\", \"mushrooms\", \"pool\", \"roots\"],\n  \"scene_type\": \"corridor\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"lighting\": [\"glowing\"],\n    \"condition\": [\"natural\"],\n    \"color\": [\"green\", \"blue\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A bustling street scene reveals a mixture of buildings and open spaces, with cobblestone paths leading through greenery and scattered water features.",
+    "terrain": [
+      "street"
+    ],
+    "features": [
+      "barrel",
+      "bush",
+      "pond",
+      "pool",
+      "wall"
+    ],
+    "scene_type": "street",
+    "style": "digital battlemap",
+    "extras": [
+      "cobblestone path",
+      "building"
+    ],
+    "attributes": {
+      "color": [
+        "green",
+        "brown",
+        "grey"
+      ],
+      "lighting": [
+        "bright"
+      ],
+      "density": [
+        "crowded"
+      ]
+    },
+    "image_path": "generated_images/Mapvember-Day-8-Warehouse-Interior-1st-Floor/gdrive_a62c856e/gdrive_a62c856e_tile_011_pos_0_24_good_144_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A bustling street scene reveals a mixture of buildings and open spaces, with cobblestone paths leading through greenery and scattered water features.\",\n  \"terrain\": [\"street\"],\n  \"features\": [\"barrel\", \"bush\", \"building\", \"pond\", \"wall\"],\n  \"scene_type\": \"street\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [\"cobblestone path\"],\n  \"attributes\": {\n    \"color\": [\"green\", \"brown\", \"grey\"],\n    \"lighting\": [\"bright\"],\n    \"density\": [\"crowded\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A circular cave with rough stone walls creates a dark, enclosed battlemap area, featuring a flat stone in the center surrounded by scattered debris.",
+    "terrain": [
+      "cave"
+    ],
+    "features": [
+      "bones",
+      "boulder",
+      "debris",
+      "pit"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "condition": [
+        "rough"
+      ],
+      "lighting": [
+        "dim"
+      ],
+      "density": [
+        "sparse"
+      ]
+    },
+    "image_path": "generated_images/Social Vampire Lair 40x40 Coffin and Blood.jpg/gdrive_09367e28/gdrive_09367e28_tile_004_pos_25_27_good_141_boring_2.1pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A circular cave with rough stone walls creates a dark, enclosed battlemap area, featuring a flat stone in the center surrounded by scattered debris.\",\n  \"terrain\": [\"cave\"],\n  \"features\": [\"bones\", \"boulder\", \"debris\", \"pit\", \"stone\"],\n  \"scene_type\": \"cave\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"condition\": [\"rough\"], \"lighting\": [\"dim\"], \"density\": [\"sparse\"]}\n}\n```"
+  },
+  {
+    "description": "A rugged terrain features a winding path bordered by sparse bushes and a gnarled tree, creating an inviting yet mysterious battlemap scene.",
+    "terrain": [
+      "grassland",
+      "path"
+    ],
+    "features": [
+      "boulder",
+      "bush",
+      "tree"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "green",
+        "brown"
+      ],
+      "density": [
+        "sparse"
+      ]
+    },
+    "image_path": "generated_images/Road02BaseDayGL_Watermark/gdrive_d3394637/gdrive_d3394637_tile_014_pos_36_0_good_132_boring_8.3pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A rugged terrain features a winding path bordered by sparse bushes and a gnarled tree, creating an inviting yet mysterious battlemap scene.\",\n  \"terrain\": [\"grassland\"],\n  \"features\": [\"boulder\", \"bush\", \"tree\"],\n  \"scene_type\": \"path\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"color\": [\"green\", \"brown\"], \"density\": [\"sparse\"]}\n}\n```"
+  },
+  {
+    "description": "A top-down battlemap view shows a cozy interior filled with various furniture items, surrounded by a rocky terrain with decorative plants and a patterned stone path leading to a central circular design.",
+    "terrain": [
+      "cliffs",
+      "interior",
+      "path"
+    ],
+    "features": [
+      "barrel",
+      "bookshelf",
+      "boulder",
+      "bush",
+      "chair",
+      "table"
+    ],
+    "scene_type": "workshop",
+    "style": "digital battlemap",
+    "extras": [
+      "path"
+    ],
+    "attributes": {
+      "color": [
+        "earthy",
+        "green",
+        "neutral"
+      ],
+      "density": [
+        "crowded"
+      ],
+      "lighting": [
+        "dim"
+      ]
+    },
+    "image_path": "generated_images/ArcticMountainBaseDayGL_Watermark/gdrive_fe48eeec/gdrive_fe48eeec_tile_003_pos_18_41_good_112_boring_22.2pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A top-down view shows a cozy interior filled with various furniture items, surrounded by a rocky terrain with decorative plants and a patterned stone path leading to a central circular design.\",\n  \"terrain\": [\"interior\", \"cliffs\"],\n  \"features\": [\"barrel\", \"bookshelf\", \"chair\", \"table\", \"flower\", \"stone path\"],\n  \"scene_type\": \"workshop\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"color\": [\"earthy\", \"green\", \"neutral\"],\n    \"density\": [\"crowded\"],\n    \"lighting\": [\"dim\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A winding path cuts through vibrant grassland, bordered by patches of dense green foliage and a few scattered stones.",
+    "terrain": [
+      "grassland",
+      "path"
+    ],
+    "features": [
+      "boulder",
+      "tree"
+    ],
+    "scene_type": "road",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "vibrant",
+        "green"
+      ],
+      "density": [
+        "sparse",
+        "dense"
+      ],
+      "lighting": [
+        "bright"
+      ]
+    },
+    "image_path": "generated_images/Social Maus Castle (roof) 50x60/gdrive_09367e28/gdrive_09367e28_tile_007_pos_38_13_good_96_boring_33.3pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A winding path cuts through vibrant grassland, bordered by patches of dense green foliage and a few scattered stones.\",\n  \"terrain\": [\"grassland\"],\n  \"features\": [\"boulder\", \"path\", \"tree\"],\n  \"scene_type\": \"road\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"color\": [\"vibrant\", \"green\"],\n    \"density\": [\"sparse\"],\n    \"lighting\": [\"bright\"]\n  }\n}\n```"
+  },
+  {
+    "description": "An aerial view of a lush garden area features a stone wall with vibrant greenery and small plants scattered throughout, creating a tranquil top-down battlemap scene.",
+    "terrain": [
+      "garden"
+    ],
+    "features": [
+      "boulder",
+      "bush",
+      "tree",
+      "wall"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "green",
+        "vibrant"
+      ],
+      "density": [
+        "lush"
+      ]
+    },
+    "image_path": "generated_images/Social Ruined Village with a tower 40x40/gdrive_09367e28/gdrive_09367e28_tile_003_pos_0_0_good_104_boring_27.8pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"An aerial view of a lush garden area features a stone wall with vibrant greenery and small plants scattered throughout, creating a tranquil battlemap scene.\",\n  \"terrain\": [\"garden\"],\n  \"features\": [\"boulder\", \"bush\", \"stone wall\", \"tree\"],\n  \"scene_type\": \"garden\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"color\": [\"green\", \"vibrant\"], \"density\": [\"lush\"]}\n}\n```"
+  },
+  {
+    "description": "A top-down view of a grassy landscape with winding paths and clusters of bushes, creating a serene battlemap scene.",
+    "terrain": [
+      "grassland",
+      "path"
+    ],
+    "features": [
+      "bush",
+      "wall"
+    ],
+    "scene_type": "clearing",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "green"
+      ],
+      "density": [
+        "sparse"
+      ]
+    },
+    "image_path": "generated_images/GrasslandMirageBaseDayGL_Watermark/gdrive_a9f49c50/gdrive_a9f49c50_tile_006_pos_21_36_good_231_boring_42.2pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A top-down view of a grassy landscape with winding paths and clusters of bushes, creating a serene battlemap scene.\",\n  \"terrain\": [\"grassland\"],\n  \"features\": [\"bush\", \"path\", \"stone wall\"],\n  \"scene_type\": \"clearing\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"color\": [\"green\"], \"density\": [\"sparse\"]}\n}\n```"
+  },
+  {
+    "description": "A serene waterway is surrounded by lush greenery and small patches of land, creating a tranquil battlemap scene with vibrant colors and natural features.",
+    "terrain": [
+      "river"
+    ],
+    "features": [
+      "boat",
+      "bush",
+      "tree"
+    ],
+    "scene_type": "clearing",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "vibrant",
+        "green",
+        "colorful"
+      ],
+      "density": [
+        "dense"
+      ],
+      "lighting": [
+        "bright"
+      ]
+    },
+    "image_path": "generated_images/Jungle Tree (rave) 29x29 low res/gdrive_09367e28/gdrive_09367e28_tile_004_pos_16_17_good_144_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A serene waterway is surrounded by lush greenery and small patches of land, creating a tranquil battlemap scene with vibrant colors and natural features.\",\n  \"terrain\": [\"river\"],\n  \"features\": [\"bush\", \"tree\", \"wooden boat\"],\n  \"scene_type\": \"clearing\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"color\": [\"vibrant\", \"green\", \"colorful\"],\n    \"density\": [\"dense\"],\n    \"lighting\": [\"bright\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A top-down view of a courtyard with cobblestone pathways and a central area featuring a large round table. Surrounding the space are crates and torches, providing a warm ambiance.",
+    "terrain": [
+      "grassland"
+    ],
+    "features": [
+      "crates",
+      "table",
+      "torch",
+      "wall"
+    ],
+    "scene_type": "courtyard",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "lighting": [
+        "warm"
+      ],
+      "condition": [
+        "well-maintained"
+      ],
+      "density": [
+        "sparse"
+      ]
+    },
+    "image_path": "generated_images/Social Maus Castle (roof) 50x60/gdrive_09367e28/gdrive_09367e28_tile_008_pos_24_29_good_117_boring_18.8pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A top-down view of a courtyard with cobblestone pathways and a central area featuring a large round table. Surrounding the space are crates and torches, providing a warm ambiance.\",\n  \"terrain\": [\"grassland\"],\n  \"features\": [\"crate\", \"table\", \"torch\", \"wall\"],\n  \"scene_type\": \"courtyard\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"lighting\": [\"warm\"], \"condition\": [\"well-maintained\"], \"density\": [\"sparse\"]}\n}\n```"
+  },
+  {
+    "description": "A dark, circular chasm with rocky walls surrounds a glowing purple crystal at its center, creating an eerie and mystical battlemap scene.",
+    "terrain": [
+      "cave"
+    ],
+    "features": [
+      "boulder",
+      "chasm",
+      "crystals"
+    ],
+    "scene_type": "clearing",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "purple",
+        "grey"
+      ],
+      "lighting": [
+        "glowing",
+        "dim",
+        "glow"
+      ],
+      "condition": [
+        "rugged"
+      ]
+    },
+    "image_path": "generated_images/Forest-meteor-night/gdrive_a62c856e/gdrive_a62c856e_tile_001_pos_4_0_good_229_boring_42.8pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A dark, circular chasm with rocky walls surrounds a glowing purple crystal at its center, creating an eerie and mystical battlemap scene.\",\n  \"terrain\": [\"cave\"],\n  \"features\": [\"boulder\", \"crystals\", \"chasm\"],\n  \"scene_type\": \"clearing\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"color\": [\"purple\", \"grey\"],\n    \"lighting\": [\"glowing\"],\n    \"condition\": [\"rugged\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A cozy tavern interior features a wooden floor and circular tables, with warm lighting casting shadows across the room. Shelves are lined with various bottles and a fireplace adds a homely atmosphere.",
+    "terrain": [
+      "interior"
+    ],
+    "features": [
+      "barrel",
+      "bookshelf",
+      "chair",
+      "table",
+      "torch"
+    ],
+    "scene_type": "tavern",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "lighting": [
+        "warm"
+      ],
+      "condition": [
+        "well-kept"
+      ],
+      "density": [
+        "crowded"
+      ]
+    },
+    "image_path": "generated_images/BaseGL_watermark/gdrive_a8d09f7a/gdrive_a8d09f7a_tile_028_pos_69_54_good_144_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A cozy tavern interior features a wooden floor and circular tables, with warm lighting casting shadows across the room. Shelves are lined with various bottles and a fireplace adds a homely atmosphere.\",\n  \"terrain\": [\"interior\"],\n  \"features\": [\"barrel\", \"bookshelf\", \"chair\", \"table\", \"torch\"],\n  \"scene_type\": \"tavern\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"lighting\": [\"warm\"], \"condition\": [\"well-kept\"], \"density\": [\"crowded\"]}\n}\n```"
+  },
+  {
+    "description": "A lush garden area is depicted from above, featuring patches of grass and scattered trees, with a few benches nestled among vibrant flowers shown in this top-down battlemap view.",
+    "terrain": [
+      "garden",
+      "grassland"
+    ],
+    "features": [
+      "bench",
+      "bush",
+      "tree"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "vibrant",
+        "green"
+      ],
+      "density": [
+        "dense"
+      ],
+      "lighting": [
+        "natural"
+      ]
+    },
+    "image_path": "generated_images/VillageVariantBaseDayGL_Watermark/gdrive_ec886873/gdrive_ec886873_tile_007_pos_42_0_good_144_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A lush garden area is depicted from above, featuring patches of grass and scattered trees, with a few benches nestled among vibrant flowers.\",\n  \"terrain\": [\"grassland\"],\n  \"features\": [\"bench\", \"bush\", \"tree\"],\n  \"scene_type\": \"garden\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"color\": [\"vibrant\", \"green\"],\n    \"density\": [\"dense\"],\n    \"lighting\": [\"natural\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A lush grassy area features scattered trees and remnants of ancient stone structures, creating a vibrant and inviting battlemap scene.",
+    "terrain": [
+      "grassland",
+      "ruins"
+    ],
+    "features": [
+      "boulder",
+      "tree"
+    ],
+    "scene_type": "clearing",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "vibrant",
+        "green"
+      ],
+      "density": [
+        "lush"
+      ],
+      "condition": [
+        "ancient"
+      ]
+    },
+    "image_path": "generated_images/Social Ruins of Reglan Castle 85x100/gdrive_09367e28/gdrive_09367e28_tile_009_pos_65_29_good_211_boring_47.2pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A lush grassy area features scattered trees and remnants of ancient stone structures, creating a vibrant and inviting battlemap scene.\",\n  \"terrain\": [\"grassland\"],\n  \"features\": [\"boulder\", \"ruins\", \"tree\"],\n  \"scene_type\": \"clearing\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"color\": [\"vibrant\", \"green\"], \"density\": [\"lush\"]}\n}\n```"
+  },
+  {
+    "description": "A top-down view of a spacious interior layout featuring a large central garden area surrounded by various rooms, including a kitchen and a study, creating a vibrant and inviting battlemap scene.",
+    "terrain": [
+      "garden",
+      "interior"
+    ],
+    "features": [
+      "bench",
+      "bookshelf",
+      "table",
+      "tree",
+      "window"
+    ],
+    "scene_type": "courtyard",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "vibrant",
+        "green"
+      ],
+      "density": [
+        "crowded"
+      ],
+      "lighting": [
+        "bright"
+      ]
+    },
+    "image_path": "generated_images/1stFloorDayRomanManorOverlay_Watermark/gdrive_7eec293b/gdrive_7eec293b_tile_001_pos_22_22_good_630_boring_30.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A top-down view of a spacious interior layout featuring a large central garden area surrounded by various rooms, including a kitchen and a study, creating a vibrant and inviting battlemap scene.\",\n  \"terrain\": [\"interior\"],\n  \"features\": [\"bench\", \"bookshelf\", \"garden\", \"table\", \"tree\", \"window\"],\n  \"scene_type\": \"courtyard\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"color\": [\"vibrant\", \"green\"],\n    \"density\": [\"crowded\"],\n    \"lighting\": [\"bright\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A lush garden scene features vibrant plants and flowers, with a smooth cobblestone path winding through the greenery, creating a serene atmosphere for exploration.",
+    "terrain": [
+      "garden",
+      "path"
+    ],
+    "features": [
+      "bush",
+      "tree"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "vibrant",
+        "green"
+      ],
+      "density": [
+        "dense"
+      ],
+      "lighting": [
+        "bright"
+      ],
+      "condition": [
+        "smooth"
+      ]
+    },
+    "image_path": "generated_images/VillageVariantBaseDayGL_Watermark/gdrive_ec886873/gdrive_ec886873_tile_004_pos_96_86_good_144_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A lush garden scene features vibrant plants and flowers, with a smooth cobblestone path winding through the greenery, creating a serene atmosphere for exploration.\",\n  \"terrain\": [\"garden\"],\n  \"features\": [\"bush\", \"path\", \"tree\"],\n  \"scene_type\": \"garden\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"color\": [\"vibrant\", \"green\"], \"density\": [\"dense\"], \"lighting\": [\"bright\"]}\n}\n```"
+  },
+  {
+    "description": "A cozy interior layout features multiple rooms with detailed furnishings, including a bedroom, living area, and dining space, all viewed from above.",
+    "terrain": [
+      "interior"
+    ],
+    "features": [
+      "bed",
+      "chair",
+      "table"
+    ],
+    "scene_type": "inn",
+    "style": "digital battlemap",
+    "extras": [
+      "decorative plants",
+      "bathtub",
+      "light fixture"
+    ],
+    "attributes": {
+      "lighting": [
+        "bright"
+      ],
+      "condition": [
+        "well-furnished"
+      ],
+      "color": [
+        "warm",
+        "earthy"
+      ]
+    },
+    "image_path": "generated_images/HouseofYspher1stFloorOverlayDay_Watermark/gdrive_74c70ea9/gdrive_74c70ea9_tile_001_pos_40_5_good_313_boring_21.8pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A cozy interior layout features multiple rooms with detailed furnishings, including a bedroom, living area, and dining space, all viewed from above.\",\n  \"terrain\": [\"interior\"],\n  \"features\": [\"bed\", \"chair\", \"table\", \"bathtub\", \"light fixture\"],\n  \"scene_type\": \"inn\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [\"decorative plants\"],\n  \"attributes\": {\n    \"lighting\": [\"bright\"],\n    \"condition\": [\"well-furnished\"],\n    \"color\": [\"warm\", \"earthy\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A dark and eerie underground cave floor is dotted with various glowing green fungi, creating a mysterious and unsettling atmosphere shown in this top-down battlemap view.",
+    "terrain": [
+      "cave"
+    ],
+    "features": [
+      "boulder",
+      "debris",
+      "mushrooms"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "green",
+        "dark"
+      ],
+      "lighting": [
+        "glowing",
+        "dim",
+        "glow"
+      ],
+      "density": [
+        "sparse"
+      ]
+    },
+    "image_path": "generated_images/Deep-Caves-Lake-Entrance/gdrive_a62c856e/gdrive_a62c856e_tile_005_pos_30_6_good_376_boring_6.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A dark and eerie underground cave floor is dotted with various glowing green fungi, creating a mysterious and unsettling atmosphere.\",\n  \"terrain\": [\"cave\"],\n  \"features\": [\"mushrooms\", \"boulder\", \"debris\"],\n  \"scene_type\": \"cave\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"color\": [\"green\", \"dark\"], \"lighting\": [\"glowing\"], \"density\": [\"sparse\"]}\n}\n```"
+  },
+  {
+    "description": "A rocky landscape features a winding path surrounded by dense foliage, creating a natural maze-like environment from a top-down battlemap perspective.",
+    "terrain": [
+      "forest"
+    ],
+    "features": [
+      "boulder",
+      "bush",
+      "tree"
+    ],
+    "scene_type": "clearing",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "density": [
+        "dense"
+      ],
+      "color": [
+        "green"
+      ],
+      "lighting": [
+        "dappled"
+      ]
+    },
+    "image_path": "generated_images/Mapvember-Day-1-Hideout-Exterior/gdrive_a62c856e/gdrive_a62c856e_tile_011_pos_58_34_good_144_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A rocky landscape features a winding path surrounded by dense foliage, creating a natural maze-like environment from a top-down perspective.\",\n  \"terrain\": [\"forest\"],\n  \"features\": [\"boulder\", \"tree\", \"bush\"],\n  \"scene_type\": \"clearing\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"density\": [\"dense\"], \"color\": [\"green\"], \"lighting\": [\"dappled\"]}\n}\n```"
+  },
+  {
+    "description": "A dramatic landscape features a flowing river of molten lava surrounded by rocky terrain and sparse vegetation, creating a hazardous yet captivating top-down battlemap scene.",
+    "terrain": [],
+    "features": [
+      "boulder",
+      "bush",
+      "crystals",
+      "pool",
+      "tree"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [
+      "pool"
+    ],
+    "attributes": {
+      "color": [
+        "orange",
+        "grey"
+      ],
+      "lighting": [
+        "fiery"
+      ],
+      "density": [
+        "sparse"
+      ]
+    },
+    "image_path": "generated_images/HellroadBaseDayGL_Watermark/gdrive_2f69213b/gdrive_2f69213b_tile_001_pos_0_0_good_125_boring_13.2pct.png",
+    "raw_response": "{\n  \"description\": \"A dramatic landscape features a flowing river of molten lava surrounded by rocky terrain and sparse vegetation, creating a hazardous yet captivating battlemap scene.\",\n  \"terrain\": [\"lava\"],\n  \"features\": [\"boulder\", \"crystal\", \"flower\", \"rock\", \"tree\"],\n  \"scene_type\": \"wilderness\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"color\": [\"orange\", \"grey\"], \"lighting\": [\"fiery\"], \"density\": [\"sparse\"]}\n}"
+  },
+  {
+    "description": "This top-down battlemap view depicts a serene riverside area with a sandy beach, dotted with trees and a wooden dock extending into the water.",
+    "terrain": [
+      "coastline",
+      "river"
+    ],
+    "features": [
+      "boat",
+      "bush",
+      "dock",
+      "pool",
+      "tree"
+    ],
+    "scene_type": "clearing",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "green",
+        "sandy"
+      ],
+      "density": [
+        "sparse"
+      ],
+      "lighting": [
+        "natural"
+      ]
+    },
+    "image_path": "generated_images/TowtansuaTownBaseDayGL_Watermark/gdrive_7eec293b/gdrive_7eec293b_tile_007_pos_0_20_good_400_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"This top-down view depicts a serene riverside area with a sandy beach, dotted with trees and a wooden dock extending into the water.\",\n  \"terrain\": [\"coastline\", \"river\"],\n  \"features\": [\"boat\", \"bush\", \"dock\", \"tree\"],\n  \"scene_type\": \"clearing\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"color\": [\"green\", \"sandy\"], \"density\": [\"sparse\"], \"lighting\": [\"natural\"]}\n}\n```"
+  },
+  {
+    "description": "A serene riverbank scene features lush green grass and rocky cliffs, with a gentle stream flowing through the terrain. The area is partially adorned with scattered crates and a few bushes.",
+    "terrain": [
+      "grassland",
+      "river"
+    ],
+    "features": [
+      "boulder",
+      "bush",
+      "crates"
+    ],
+    "scene_type": "clearing",
+    "style": "digital battlemap",
+    "extras": [
+      "water"
+    ],
+    "attributes": {
+      "color": [
+        "green",
+        "natural"
+      ],
+      "density": [
+        "lush"
+      ],
+      "lighting": [
+        "bright"
+      ]
+    },
+    "image_path": "generated_images/Low Res  Night Ruins of the moon godess [40x55]/gdrive_09367e28/gdrive_09367e28_tile_005_pos_0_20_good_105_boring_27.1pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A serene riverbank scene features lush green grass and rocky cliffs, with a gentle stream flowing through the terrain. The area is partially adorned with scattered crates and a few bushes.\",\n  \"terrain\": [\"grassland\", \"river\"],\n  \"features\": [\"bush\", \"crate\", \"rock\", \"water\"],\n  \"scene_type\": \"clearing\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"color\": [\"green\", \"natural\"], \"density\": [\"lush\"], \"lighting\": [\"bright\"]}\n}\n```"
+  },
+  {
+    "description": "A lush garden area features winding stone paths surrounded by vibrant greenery and blooming flowers, creating a serene battlemap scene.",
+    "terrain": [
+      "garden",
+      "grassland"
+    ],
+    "features": [
+      "boulder",
+      "bush"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "vibrant",
+        "green"
+      ],
+      "density": [
+        "lush"
+      ],
+      "lighting": [
+        "bright"
+      ]
+    },
+    "image_path": "generated_images/Social Vineyard with gorge [35x55]/gdrive_09367e28/gdrive_09367e28_tile_008_pos_20_24_good_144_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A lush garden area features winding stone paths surrounded by vibrant greenery and blooming flowers, creating a serene battlemap scene.\",\n  \"terrain\": [\"grassland\"],\n  \"features\": [\"boulder\", \"bush\", \"flower\"],\n  \"scene_type\": \"garden\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"color\": [\"vibrant\", \"green\"],\n    \"density\": [\"lush\"],\n    \"lighting\": [\"bright\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A bustling marketplace scene showcases various stalls and pathways, with scattered crates and tables among vibrant greenery.",
+    "terrain": [
+      "street"
+    ],
+    "features": [
+      "barrel",
+      "bench",
+      "bush",
+      "cart",
+      "crates",
+      "table"
+    ],
+    "scene_type": "market",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "vibrant"
+      ],
+      "density": [
+        "crowded"
+      ],
+      "lighting": [
+        "bright"
+      ]
+    },
+    "image_path": "generated_images/VillageVariantBaseDayGL_Watermark/gdrive_ec886873/gdrive_ec886873_tile_049_pos_24_48_good_144_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A bustling marketplace scene showcases various stalls and pathways, with scattered crates and tables among vibrant greenery.\",\n  \"terrain\": [\"street\"],\n  \"features\": [\"barrel\", \"bench\", \"cart\", \"table\", \"bush\", \"crates\"],\n  \"scene_type\": \"market\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"color\": [\"vibrant\"],\n    \"density\": [\"crowded\"],\n    \"lighting\": [\"bright\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A top-down view of a fortified area reveals cobblestone pathways surrounded by sturdy stone walls, with a few scattered crates and a wooden cart.",
+    "terrain": [
+      "street"
+    ],
+    "features": [
+      "boulder",
+      "cart",
+      "crates",
+      "wall"
+    ],
+    "scene_type": "courtyard",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "grey",
+        "brown"
+      ],
+      "condition": [
+        "sturdy"
+      ],
+      "density": [
+        "sparse"
+      ]
+    },
+    "image_path": "generated_images/Social The building of castele Trifels [60x100] Phase 5/gdrive_09367e28/gdrive_09367e28_tile_027_pos_26_61_good_144_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A top-down view of a fortified area reveals cobblestone pathways surrounded by sturdy stone walls, with a few scattered crates and a wooden cart.\",\n  \"terrain\": [\"street\"],\n  \"features\": [\"cart\", \"crate\", \"wall\"],\n  \"scene_type\": \"courtyard\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"color\": [\"grey\", \"brown\"],\n    \"condition\": [\"sturdy\"],\n    \"density\": [\"sparse\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A bustling urban street scene showcases a network of buildings and pathways, with tables and decorations visible in the courtyards and inside the structures.",
+    "terrain": [
+      "street"
+    ],
+    "features": [
+      "barrel",
+      "chair",
+      "table",
+      "tree"
+    ],
+    "scene_type": "market",
+    "style": "digital battlemap",
+    "extras": [
+      "building"
+    ],
+    "attributes": {
+      "lighting": [
+        "bright"
+      ],
+      "density": [
+        "crowded"
+      ],
+      "color": [
+        "earthy"
+      ]
+    },
+    "image_path": "generated_images/CityDistric07BaseDayGL_Watermark/gdrive_6d8b9e26/gdrive_6d8b9e26_tile_001_pos_0_0_good_900_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A bustling urban street scene showcases a network of buildings and pathways, with tables and decorations visible in the courtyards and inside the structures.\",\n  \"terrain\": [\"street\"],\n  \"features\": [\"barrel\", \"chair\", \"table\", \"tree\"],\n  \"scene_type\": \"market\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [\"building\"],\n  \"attributes\": {\"lighting\": [\"bright\"], \"density\": [\"crowded\"], \"color\": [\"earthy\"]}\n}\n```"
+  },
+  {
+    "description": "A top-down view reveals a rustic workshop surrounded by overgrown vegetation and a winding path, creating a blend of nature and craftsmanship.",
+    "terrain": [
+      "grassland",
+      "path"
+    ],
+    "features": [
+      "anvil",
+      "bench",
+      "bush",
+      "cart",
+      "tree"
+    ],
+    "scene_type": "workshop",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "lighting": [
+        "natural"
+      ],
+      "condition": [
+        "overgrown"
+      ],
+      "density": [
+        "sparse"
+      ]
+    },
+    "image_path": "generated_images/Village01BaseDayGL_Watermark/gdrive_ec886873/gdrive_ec886873_tile_013_pos_70_80_good_400_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A top-down view reveals a rustic workshop surrounded by overgrown vegetation and a winding path, creating a blend of nature and craftsmanship.\",\n  \"terrain\": [\"grassland\"],\n  \"features\": [\"anvil\", \"bench\", \"bush\", \"cart\", \"tree\"],\n  \"scene_type\": \"workshop\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [\"path\"],\n  \"attributes\": {\n    \"lighting\": [\"natural\"],\n    \"condition\": [\"overgrown\"],\n    \"density\": [\"sparse\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A dark cave filled with intricate webs and scattered debris, revealing a treacherous path through the shadows.",
+    "terrain": [
+      "cave",
+      "dungeon"
+    ],
+    "features": [
+      "cobweb",
+      "debris",
+      "roots"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [
+      "glowing symbols"
+    ],
+    "attributes": {
+      "lighting": [
+        "dim"
+      ],
+      "condition": [
+        "overgrown",
+        "treacherous"
+      ],
+      "density": [
+        "sparse"
+      ]
+    },
+    "image_path": "generated_images/BaseDayGL_Watermark/gdrive_79141673/gdrive_79141673_tile_014_pos_24_12_good_142_boring_1.4pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A dark cave filled with intricate webs and scattered debris, revealing a treacherous path through the shadows.\",\n  \"terrain\": [\"cave\"],\n  \"features\": [\"cobweb\", \"debris\", \"roots\"],\n  \"scene_type\": \"dungeon\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [\"glowing symbols\"],\n  \"attributes\": {\"lighting\": [\"dim\"], \"condition\": [\"overgrown\"], \"density\": [\"sparse\"]}\n}\n```"
+  },
+  {
+    "description": "A top-down view of a ship deck with large sails unfurled, revealing wooden planks and various nautical details.",
+    "terrain": [
+      "coastline"
+    ],
+    "features": [
+      "barrel",
+      "dock",
+      "stairs"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [
+      "deck",
+      "sail"
+    ],
+    "attributes": {
+      "lighting": [
+        "bright"
+      ],
+      "condition": [
+        "well-maintained"
+      ],
+      "color": [
+        "brown",
+        "blue"
+      ]
+    },
+    "image_path": "generated_images/PlayerShipMainDeckDayOcean/gdrive_7eec293b/gdrive_7eec293b_tile_002_pos_2_6_good_116_boring_19.4pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A top-down view of a ship deck with large sails unfurled, revealing wooden planks and various nautical details.\",\n  \"terrain\": [\"coastline\"],\n  \"features\": [\"barrel\", \"deck\", \"sail\", \"stairs\"],\n  \"scene_type\": \"dock\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"lighting\": [\"bright\"], \"condition\": [\"well-maintained\"], \"color\": [\"brown\", \"blue\"]}\n}\n```"
+  },
+  {
+    "description": "A dense forest area filled with various trees and large boulders creates a rich green landscape, perfect for exploration or ambush.",
+    "terrain": [
+      "forest"
+    ],
+    "features": [
+      "boulder",
+      "bush",
+      "tree"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "green"
+      ],
+      "density": [
+        "dense"
+      ],
+      "lighting": [
+        "dappled"
+      ]
+    },
+    "image_path": "generated_images/Group 1 copy/gdrive_a62c856e/gdrive_a62c856e_tile_025_pos_36_36_good_144_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A dense forest area filled with various trees and large boulders creates a rich green landscape, perfect for exploration or ambush.\",\n  \"terrain\": [\"forest\"],\n  \"features\": [\"boulder\", \"bush\", \"tree\"],\n  \"scene_type\": \"wilderness\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"color\": [\"green\"],\n    \"density\": [\"dense\"],\n    \"lighting\": [\"dappled\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A dark and foreboding dungeon features flowing lava in the central corridor, surrounded by stone walls and scattered debris.",
+    "terrain": [
+      "dungeon"
+    ],
+    "features": [
+      "boulder",
+      "debris",
+      "pool",
+      "wall"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "lighting": [
+        "glowing",
+        "dim"
+      ],
+      "condition": [
+        "cracked"
+      ],
+      "density": [
+        "crowded"
+      ]
+    },
+    "image_path": "generated_images/BaseDayGL_Watermark/gdrive_ab5ce9ac/gdrive_ab5ce9ac_tile_001_pos_9_4_good_287_boring_28.2pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A dark and foreboding dungeon features flowing lava in the central corridor, surrounded by stone walls and scattered debris.\",\n  \"terrain\": [\"dungeon\"],\n  \"features\": [\"boulder\", \"debris\", \"lava\", \"wall\"],\n  \"scene_type\": \"dungeon\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"lighting\": [\"glowing\"], \"condition\": [\"cracked\"], \"density\": [\"crowded\"]}\n}\n```"
+  },
+  {
+    "description": "A serene riverside scene features a winding river flanked by sparse trees and a dirt path leading through the landscape shown in this top-down battlemap view.",
+    "terrain": [
+      "grassland",
+      "path",
+      "river"
+    ],
+    "features": [
+      "boulder",
+      "tree"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [
+      "abandoned structure"
+    ],
+    "attributes": {
+      "lighting": [
+        "natural"
+      ],
+      "condition": [
+        "overgrown"
+      ],
+      "density": [
+        "sparse"
+      ]
+    },
+    "image_path": "generated_images/BaseDayGL.webp_Watermark/gdrive_a14a7233/gdrive_a14a7233_tile_004_pos_22_22_good_400_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A serene riverside scene features a winding river flanked by sparse trees and a dirt path leading through the landscape.\",\n  \"terrain\": [\"grassland\", \"river\"],\n  \"features\": [\"boulder\", \"path\", \"tree\"],\n  \"scene_type\": \"wilderness\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [\"abandoned structure\"],\n  \"attributes\": {\"lighting\": [\"natural\"], \"condition\": [\"overgrown\"], \"density\": [\"sparse\"]}\n}\n```"
+  },
+  {
+    "description": "This dungeon scene features a winding cave with glowing crystals embedded in the walls, illuminating the dark passageways with an eerie light.",
+    "terrain": [
+      "cave",
+      "dungeon"
+    ],
+    "features": [
+      "crystals",
+      "debris",
+      "wall"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "lighting": [
+        "glowing",
+        "glow",
+        "dim"
+      ],
+      "condition": [
+        "cracked"
+      ],
+      "color": [
+        "blue",
+        "dark"
+      ]
+    },
+    "image_path": "generated_images/IcyCaveBaseDayGL_Watermark/gdrive_32ab515a/gdrive_32ab515a_tile_013_pos_11_66_good_74_boring_48.6pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"This dungeon scene features a winding cave with glowing crystals embedded in the walls, illuminating the dark passageways with an eerie light.\",\n  \"terrain\": [\"cave\"],\n  \"features\": [\"crystals\", \"debris\", \"wall\"],\n  \"scene_type\": \"dungeon\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"lighting\": [\"glowing\"],\n    \"condition\": [\"cracked\"],\n    \"color\": [\"blue\", \"dark\"]\n  }\n}\n```"
+  },
+  {
+    "description": "This top-down view of a forested area features a mix of greenery and open ground, with a small wooden structure visible along the edge.",
+    "terrain": [
+      "forest"
+    ],
+    "features": [
+      "bush",
+      "stump",
+      "tree"
+    ],
+    "scene_type": "clearing",
+    "style": "digital battlemap",
+    "extras": [
+      "wooden structure"
+    ],
+    "attributes": {
+      "color": [
+        "green",
+        "brown"
+      ],
+      "density": [
+        "sparse"
+      ]
+    },
+    "image_path": "generated_images/SawmillBaseDayGL_Watermark/gdrive_5857d7f6/gdrive_5857d7f6_tile_006_pos_42_0_good_133_boring_7.6pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"This top-down view of a forested area features a mix of greenery and open ground, with a small wooden structure visible along the edge.\",\n  \"terrain\": [\"forest\"],\n  \"features\": [\"bush\", \"stump\", \"tree\"],\n  \"scene_type\": \"clearing\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [\"wooden structure\"],\n  \"attributes\": {\"color\": [\"green\", \"brown\"], \"density\": [\"sparse\"]}\n}\n```"
+  },
+  {
+    "description": "A vibrant outdoor scene features winding paths surrounded by rocky formations and small ponds, creating a lively battlemap layout.",
+    "terrain": [
+      "grassland"
+    ],
+    "features": [
+      "bench",
+      "boulder",
+      "pond",
+      "tree"
+    ],
+    "scene_type": "clearing",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "vibrant",
+        "green"
+      ],
+      "density": [
+        "sparse"
+      ],
+      "lighting": [
+        "bright"
+      ]
+    },
+    "image_path": "generated_images/Low Res Zoo Battlemap [60x70]/gdrive_09367e28/gdrive_09367e28_tile_004_pos_30_40_good_900_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A vibrant outdoor scene features winding paths surrounded by rocky formations and small ponds, creating a lively battlemap layout.\",\n  \"terrain\": [\"grassland\"],\n  \"features\": [\"boulder\", \"bench\", \"pond\", \"rock\", \"tree\"],\n  \"scene_type\": \"clearing\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"color\": [\"vibrant\", \"green\"], \"density\": [\"sparse\"], \"lighting\": [\"bright\"]}\n}\n```"
+  },
+  {
+    "description": "A dark underground scene features a winding corridor with storage rooms and a flowing green sewer. The layout includes barrels, crates, and a boat resting near the water's edge shown in this top-down battlemap view.",
+    "terrain": [
+      "interior",
+      "sewer"
+    ],
+    "features": [
+      "barrel",
+      "boat",
+      "crates",
+      "lantern",
+      "pool",
+      "table"
+    ],
+    "scene_type": "dungeon",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "lighting": [
+        "dim"
+      ],
+      "condition": [
+        "worn"
+      ],
+      "color": [
+        "dark",
+        "green"
+      ]
+    },
+    "image_path": "generated_images/SewerTunnelGL_Watermark/gdrive_e2384fd0/gdrive_e2384fd0_tile_001_pos_6_0_good_320_boring_20.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A dark underground scene features a winding corridor with storage rooms and a flowing green sewer. The layout includes barrels, crates, and a boat resting near the water's edge.\",\n  \"terrain\": [\"interior\", \"sewer\"],\n  \"features\": [\"barrel\", \"boat\", \"crate\", \"lantern\", \"table\"],\n  \"scene_type\": \"sewer\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"lighting\": [\"dim\"],\n    \"condition\": [\"worn\"],\n    \"color\": [\"dark\", \"green\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A top-down view reveals a snowy garden with colorful flowers scattered throughout, surrounded by dark trees and winding paths.",
+    "terrain": [
+      "garden",
+      "path",
+      "snow"
+    ],
+    "features": [
+      "bush",
+      "campfire",
+      "tree"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [
+      "colorful flowers"
+    ],
+    "attributes": {
+      "color": [
+        "vibrant",
+        "colorful"
+      ],
+      "density": [
+        "sparse"
+      ],
+      "lighting": [
+        "dim"
+      ]
+    },
+    "image_path": "generated_images/CandyVillageBaseNightLitGLDUN/gdrive_80bb85db/gdrive_80bb85db_tile_002_pos_41_0_good_297_boring_25.8pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A top-down view reveals a snowy garden with colorful flowers scattered throughout, surrounded by dark trees and winding paths.\",\n  \"terrain\": [\"snow\"],\n  \"features\": [\"bush\", \"campfire\", \"path\", \"tree\"],\n  \"scene_type\": \"garden\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [\"colorful flowers\"],\n  \"attributes\": {\n    \"color\": [\"vibrant\"],\n    \"density\": [\"sparse\"],\n    \"lighting\": [\"dim\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A top-down view of an overgrown dungeon area with crumbling stone walls and a small pool of water, surrounded by vibrant aquatic plants and scattered debris.",
+    "terrain": [
+      "dungeon"
+    ],
+    "features": [
+      "barrel",
+      "boulder",
+      "pool",
+      "rubble",
+      "vines",
+      "wall"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [
+      "fish"
+    ],
+    "attributes": {
+      "color": [
+        "vibrant",
+        "green",
+        "blue"
+      ],
+      "condition": [
+        "overgrown",
+        "crumbling"
+      ],
+      "density": [
+        "sparse"
+      ]
+    },
+    "image_path": "generated_images/Social Underwater Castle Ruin (no glowing fish) [55x90]/gdrive_09367e28/gdrive_09367e28_tile_010_pos_11_46_good_134_boring_6.9pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A top-down view of an overgrown dungeon area with crumbling stone walls and a small pool of water, surrounded by vibrant aquatic plants and scattered debris.\",\n  \"terrain\": [\"dungeon\"],\n  \"features\": [\"barrel\", \"pool\", \"rubble\", \"stone wall\", \"vines\"],\n  \"scene_type\": \"dungeon\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [\"fish\"],\n  \"attributes\": {\n    \"color\": [\"vibrant\", \"green\", \"blue\"],\n    \"condition\": [\"overgrown\", \"crumbling\"],\n    \"density\": [\"sparse\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A tranquil lakeside scene features wooden docks leading to the water, with small houses nestled among the greenery and illuminated by soft lights.",
+    "terrain": [
+      "lake",
+      "path"
+    ],
+    "features": [
+      "dock",
+      "pond",
+      "pool",
+      "tree"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [
+      "house"
+    ],
+    "attributes": {
+      "lighting": [
+        "soft",
+        "glowing",
+        "bright"
+      ],
+      "condition": [
+        "well-maintained"
+      ],
+      "color": [
+        "green",
+        "brown"
+      ]
+    },
+    "image_path": "generated_images/Town-Street-Docks-Night-3/gdrive_a62c856e/gdrive_a62c856e_tile_005_pos_1_17_good_100_boring_30.6pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A tranquil lakeside scene features wooden docks leading to the water, with small houses nestled among the greenery and illuminated by soft lights.\",\n  \"terrain\": [\"lake\"],\n  \"features\": [\"dock\", \"house\", \"path\", \"pond\", \"tree\"],\n  \"scene_type\": \"dock\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"lighting\": [\"soft\", \"glowing\"],\n    \"condition\": [\"well-maintained\"],\n    \"color\": [\"green\", \"brown\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A dense forest scene showcases a variety of vibrant greenery, with patches of underbrush and rocky terrain interspersed throughout shown in this top-down battlemap view.",
+    "terrain": [
+      "forest"
+    ],
+    "features": [
+      "boulder",
+      "bush",
+      "tree"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "vibrant",
+        "green"
+      ],
+      "density": [
+        "dense"
+      ]
+    },
+    "image_path": "generated_images/50x50-Jungle-Pit/gdrive_a62c856e/gdrive_a62c856e_tile_009_pos_38_21_good_144_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A dense forest scene showcases a variety of vibrant greenery, with patches of underbrush and rocky terrain interspersed throughout.\",\n  \"terrain\": [\"forest\"],\n  \"features\": [\"bush\", \"tree\", \"rock\"],\n  \"scene_type\": \"wilderness\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"color\": [\"vibrant\", \"green\"],\n    \"density\": [\"dense\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A top-down battlemap view of a garden area reveals winding paths bordered by vibrant blue flowers and overgrown vines, with decorative elements scattered throughout.",
+    "terrain": [
+      "garden"
+    ],
+    "features": [
+      "bush",
+      "crates",
+      "fountain",
+      "table",
+      "vines"
+    ],
+    "scene_type": "courtyard",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "vibrant",
+        "blue"
+      ],
+      "density": [
+        "overgrown"
+      ],
+      "condition": [
+        "decorative",
+        "overgrown"
+      ]
+    },
+    "image_path": "generated_images/NeuschwansteinCastleBaseDayGL_Watermark/gdrive_74c70ea9/gdrive_74c70ea9_tile_032_pos_28_24_good_136_boring_5.6pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A top-down view of a garden area reveals winding paths bordered by vibrant blue flowers and overgrown vines, with decorative elements scattered throughout.\",\n  \"terrain\": [\"garden\"],\n  \"features\": [\"bush\", \"crates\", \"fountain\", \"table\", \"vines\"],\n  \"scene_type\": \"courtyard\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"color\": [\"vibrant\", \"blue\"],\n    \"density\": [\"overgrown\"],\n    \"condition\": [\"decorative\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A serene top-down view of a lush garden featuring dense greenery surrounding a small, tranquil pond, with a stone pathway along the edge.",
+    "terrain": [
+      "garden",
+      "path"
+    ],
+    "features": [
+      "boulder",
+      "bush",
+      "pond",
+      "tree"
+    ],
+    "scene_type": "wilderness",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "green"
+      ],
+      "density": [
+        "dense"
+      ],
+      "lighting": [
+        "bright"
+      ]
+    },
+    "image_path": "generated_images/TreeOverlayDay_watermark/gdrive_2b3aa43f/gdrive_2b3aa43f_tile_018_pos_88_12_good_144_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A serene top-down view of a lush garden featuring dense greenery surrounding a small, tranquil pond, with a stone pathway along the edge.\",\n  \"terrain\": [\"garden\"],\n  \"features\": [\"path\", \"pond\", \"bush\", \"tree\"],\n  \"scene_type\": \"garden\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"color\": [\"green\"], \"density\": [\"dense\"], \"lighting\": [\"bright\"]}\n}\n```"
+  },
+  {
+    "description": "A dark and intricate underground cavern features winding paths and glowing lava flows illuminating the rocky terrain.",
+    "terrain": [
+      "cave"
+    ],
+    "features": [
+      "boulder",
+      "debris",
+      "pool",
+      "rail tracks",
+      "rubble"
+    ],
+    "scene_type": "mine",
+    "style": "digital battlemap",
+    "extras": [
+      "pool"
+    ],
+    "attributes": {
+      "lighting": [
+        "glowing",
+        "dim",
+        "glow"
+      ],
+      "condition": [
+        "rough"
+      ],
+      "density": [
+        "crowded"
+      ]
+    },
+    "image_path": "generated_images/BasaltMineBaseDayGL_Watermark/gdrive_afceff12/gdrive_afceff12_tile_010_pos_15_24_good_117_boring_18.8pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A dark and intricate underground cavern features winding paths and glowing lava flows illuminating the rocky terrain.\",\n  \"terrain\": [\"cave\", \"lava\"],\n  \"features\": [\"boulder\", \"rail tracks\", \"rubble\", \"lava\", \"debris\"],\n  \"scene_type\": \"mine\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"lighting\": [\"glowing\"],\n    \"condition\": [\"rough\"],\n    \"density\": [\"crowded\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A crumbling stone structure is overrun by vegetation, with cracks in the pavement and scattered debris creating a sense of abandonment in this top-down view.",
+    "terrain": [
+      "ruins"
+    ],
+    "features": [
+      "boulder",
+      "bush",
+      "debris",
+      "wall"
+    ],
+    "scene_type": "courtyard",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "condition": [
+        "cracked",
+        "abandoned"
+      ],
+      "density": [
+        "overgrown"
+      ],
+      "color": [
+        "grey",
+        "green"
+      ]
+    },
+    "image_path": "generated_images/Roll20-50x50-Giant-Jungle-Temple-Roof/gdrive_a62c856e/gdrive_a62c856e_tile_001_pos_0_10_good_899_boring_0.1pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A crumbling stone structure is overrun by vegetation, with cracks in the pavement and scattered debris creating a sense of abandonment in this top-down view.\",\n  \"terrain\": [\"ruins\"],\n  \"features\": [\"debris\", \"boulder\", \"plant\", \"wall\"],\n  \"scene_type\": \"courtyard\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"condition\": [\"cracked\", \"abandoned\"],\n    \"density\": [\"overgrown\"],\n    \"color\": [\"grey\", \"green\"]\n  }\n}\n```"
+  },
+  {
+    "description": "An intricately patterned floor features four large eye-like designs, surrounded by small green plants, creating a mysterious and surreal environment.",
+    "terrain": [
+      "interior"
+    ],
+    "features": [
+      "bush"
+    ],
+    "scene_type": "study",
+    "style": "digital battlemap",
+    "extras": [
+      "eye"
+    ],
+    "attributes": {
+      "color": [
+        "neutral",
+        "green"
+      ],
+      "condition": [
+        "intricate"
+      ],
+      "density": [
+        "sparse"
+      ]
+    },
+    "image_path": "generated_images/Grand-Halls-Cathedral/gdrive_a62c856e/gdrive_a62c856e_tile_001_pos_29_49_good_127_boring_11.8pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"An intricately patterned floor features four large eye-like designs, surrounded by small green plants, creating a mysterious and surreal environment.\",\n  \"terrain\": [\"interior\"],\n  \"features\": [\"eye\", \"plant\"],\n  \"scene_type\": \"study\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"color\": [\"neutral\", \"green\"],\n    \"condition\": [\"intricate\"],\n    \"density\": [\"sparse\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A bustling coastal village scene features a winding path lined with houses and barrels, leading to a serene blue water body at the edge.",
+    "terrain": [
+      "coastline",
+      "path",
+      "street"
+    ],
+    "features": [
+      "barrel",
+      "bush",
+      "pool",
+      "tree"
+    ],
+    "scene_type": "street",
+    "style": "digital battlemap",
+    "extras": [
+      "house"
+    ],
+    "attributes": {
+      "color": [
+        "vibrant",
+        "earthy",
+        "blue"
+      ],
+      "lighting": [
+        "bright"
+      ],
+      "density": [
+        "crowded"
+      ]
+    },
+    "image_path": "generated_images/50x50-Pirate-Ship-Arrival/gdrive_a62c856e/gdrive_a62c856e_tile_006_pos_16_38_good_143_boring_0.7pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A bustling coastal village scene features a winding path lined with houses and barrels, leading to a serene blue water body at the edge.\",\n  \"terrain\": [\"coastline\"],\n  \"features\": [\"barrel\", \"bush\", \"house\", \"path\", \"tree\"],\n  \"scene_type\": \"street\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\"color\": [\"vibrant\", \"earthy\"], \"lighting\": [\"bright\"], \"density\": [\"crowded\"]}\n}\n```"
+  },
+  {
+    "description": "A wooden structure is set against rocky terrain, with an open area filled with crates and barrels, ideal for a strategic top-down battlemap layout.",
+    "terrain": [
+      "grassland"
+    ],
+    "features": [
+      "barrel",
+      "bench",
+      "cart",
+      "crates",
+      "table"
+    ],
+    "scene_type": "camp",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "brown",
+        "green"
+      ],
+      "density": [
+        "crowded"
+      ],
+      "lighting": [
+        "natural"
+      ]
+    },
+    "image_path": "generated_images/SocialBandit Fort (51x50)/gdrive_09367e28/gdrive_09367e28_tile_002_pos_31_0_good_316_boring_21.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A wooden structure is set against rocky terrain, with an open area filled with crates and barrels, ideal for a strategic battlemap layout.\",\n  \"terrain\": [\"grassland\"],\n  \"features\": [\"barrel\", \"bench\", \"cart\", \"crates\", \"table\"],\n  \"scene_type\": \"camp\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"color\": [\"brown\", \"green\"],\n    \"density\": [\"crowded\"],\n    \"lighting\": [\"natural\"]\n  }\n}\n```"
+  },
+  {
+    "description": "A rocky cave landscape reveals a small pool of water surrounded by lush greenery and stone formations, creating a serene battlemap setting.",
+    "terrain": [
+      "cave"
+    ],
+    "features": [
+      "boulder",
+      "pool",
+      "roots"
+    ],
+    "scene_type": "clearing",
+    "style": "digital battlemap",
+    "extras": [],
+    "attributes": {
+      "color": [
+        "green",
+        "grey"
+      ],
+      "density": [
+        "lush"
+      ],
+      "condition": [
+        "natural"
+      ]
+    },
+    "image_path": "generated_images/Social Canyon Encounter Map 45x35, water and cave entrance/gdrive_09367e28/gdrive_09367e28_tile_001_pos_0_0_good_400_boring_0.0pct.png",
+    "raw_response": "```json\n{\n  \"description\": \"A rocky cave landscape reveals a small pool of water surrounded by lush greenery and stone formations, creating a serene battlemap setting.\",\n  \"terrain\": [\"cave\"],\n  \"features\": [\"boulder\", \"pool\", \"roots\", \"stone\"],\n  \"scene_type\": \"clearing\",\n  \"style\": \"digital battlemap\",\n  \"extras\": [],\n  \"attributes\": {\n    \"color\": [\"green\", \"grey\"],\n    \"density\": [\"lush\"],\n    \"condition\": [\"natural\"]\n  }\n}\n```"
+  }
+]

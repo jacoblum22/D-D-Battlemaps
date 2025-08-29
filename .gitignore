@@ -48,6 +48,7 @@ desktop.ini
 # Generated outputs
 output/
 generated_images/
+wilderness_images/
 # Default pipeline output folder
 generated_tiles/
 # Test pipeline output - ignore all image formats in specific directories
@@ -70,11 +71,8 @@ test_images/*.tiff
 *_progress.json
 pipeline_progress.json
 
-# Test files (keep folder structure but not large images)
-test_images/*.webp
-test_images/*.png  
-test_images/*.jpg
-test_images/*.jpeg
+# Test files (ignore entire test_images folder and all contents)
+test_images/
 
 # Logs and temporary files
 *.log
@@ -82,6 +80,10 @@ test_images/*.jpeg
 *.temp
 temp/
 tmp/
+# Package and processing logs
+package_*.log
+*_processing.log
+*_dataset.log
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -102,3 +104,78 @@ google_drive_credentials.json
 google_drive_token.json
 google_drive_token.pickle
 client_secret*.json
+
+# Environment variables and API keys
+.env
+.env.local
+*.key
+openai_api_key.txt
+
+# Dataset and training artifacts (large files)
+dataset_v1/
+dataset_v1_complete.zip
+dataset_v1_archive/
+dataset_holdout_extra/
+dataset_v1_training/
+# Dataset zip files with timestamps or versioning
+*_dataset_*.zip
+dnd_battlemaps_lora_dataset_*.zip
+wilderness_battlemaps_dataset_*.zip
+*.zip
+# Caption files (large processed caption data)
+phase4_captions*.json
+captions_grassland.json
+# Dataset split files
+train.txt
+val.txt
+test.txt
+# Training data files
+*_captions.txt
+*_captions/
+training_captions/
+# Generated validation and prompt files
+validation_prompts.txt
+validation_prompts.json
+*_prompts.txt
+# Validation prompt images and seed outputs
+validation_prompt_images/
+seed*.png
+# Wilderness dataset packages
+wilderness_dataset_package/
+# Packaging and preparation scripts outputs
+create_dataset_split*.py
+create_final_dataset_split.py
+move_extra_images.py
+find_missing_captions.py
+build_training_captions*.py
+package_dataset.py
+
+# Model training outputs
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+model_checkpoints/
+lora_outputs/
+training_outputs/
+validation_outputs/
+# Training configuration files
+kohya_training_config.toml
+*_training_config.toml
+*.toml
+
+# Training logs and metrics
+logs/
+wandb/
+tensorboard_logs/
+training_logs/
+
+# Fine-tuning temporary files
+*_splits.txt
+*_training_cache/
+
+# Generated comparison and output images
+comparison_images/
+generated_comparison_*/
+output_samples/
+sample_generations/

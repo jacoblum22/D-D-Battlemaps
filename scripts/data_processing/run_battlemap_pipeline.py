@@ -13,10 +13,14 @@ processing pipeline. It allows users to:
 
 Usage:
     python run_battlemap_pipeline.py
+    python run_battlemap_pipeline.py --no-saved-images  # Test mode without saving images
+    python run_battlemap_pipeline.py --no-multiprocessing  # Use single-threaded processing
 """
 
 import sys
 import os
+import json
+import argparse
 from pathlib import Path
 from typing import List, Optional
 
@@ -155,10 +159,53 @@ def collect_sources() -> List[str]:
                 sources.append(source)
                 print(f"✅ Added: {source}")
 
+    # Check for duplicate sources after all sources are collected
+    if len(sources) > 1:
+        print("\n🔍 Checking for duplicate sources...")
+
+        # Import duplicate detector
+        from battlemap_processor.core.duplicate_detector import SourceDeduplicator
+
+        deduplicator = SourceDeduplicator(debug=True)
+        deduplicated_sources, duplicates = deduplicator.deduplicate_sources(sources)
+
+        if duplicates:
+            print(f"\n⚠️  Found {len(duplicates)} duplicate source groups:")
+            for dup in duplicates:
+                reason_map = {
+                    "same_gdrive_folder": "Same Google Drive folder",
+                    "same_gdrive_file": "Same Google Drive file",
+                    "same_url": "Same URL",
+                    "same_local_path": "Same local path",
+                }
+                reason = reason_map.get(dup.reason, dup.reason)
+
+                print(f"\n  📁 {reason}:")
+                print(f"     Keeping: {dup.original_path}")
+                for dup_path in dup.duplicate_paths:
+                    print(f"     Removing: {dup_path}")
+
+            use_deduplicated = get_yes_no(
+                f"\nRemove {sum(len(dup.duplicate_paths) for dup in duplicates)} duplicate sources?",
+                default=True,
+            )
+
+            if use_deduplicated:
+                sources = deduplicated_sources
+                print(f"✅ Using {len(sources)} unique sources")
+            else:
+                print("❌ Keeping all sources including duplicates")
+        else:
+            print("✅ No duplicate sources detected")
+
     return sources
 
 
-def configure_pipeline() -> PipelineConfig:
+def configure_pipeline(
+    test_mode: bool = False,
+    force_single_threaded: bool = False,
+    debug_mode: bool = False,
+) -> PipelineConfig:
     """Configure pipeline settings interactively"""
     print()
     print("⚙️ Pipeline Configuration")
@@ -186,7 +233,7 @@ def configure_pipeline() -> PipelineConfig:
     )
 
     max_images = get_int_input(
-        "Maximum images to process (or 'unlimited')", default=20, allow_none=True
+        "Maximum images to process (or 'unlimited')", default=None, allow_none=True
     )
 
     max_tiles_per_image = get_int_input(
@@ -199,8 +246,8 @@ def configure_pipeline() -> PipelineConfig:
     print()
     print("🔍 Detection Settings")
     print("──────────────────────")
+    print("📐 Using rotating tile sizes: 12x12 (70%), 20x20 (20%), 30x30 (10%)")
 
-    tile_size = get_int_input("Tile size (grid squares)", default=12)
     boring_threshold = get_float_input(
         "Boring threshold (max fraction of boring squares per tile)", default=0.5
     )
@@ -218,8 +265,35 @@ def configure_pipeline() -> PipelineConfig:
     print("🛠️ Processing Settings")
     print("────────────────────────")
 
-    save_progress = get_yes_no("Save progress for resuming?", default=True)
-    debug = get_yes_no("Enable debug output?", default=True)
+    if test_mode:
+        save_progress = False  # No point saving progress in test mode
+        debug = (
+            debug_mode or True
+        )  # Use command line debug or always show debug in test mode
+        if force_single_threaded:
+            use_multiprocessing = False
+            print("🔄 Single-threaded processing forced by --no-multiprocessing flag")
+        else:
+            use_multiprocessing = get_yes_no(
+                "Use multiprocessing for faster image processing?", default=True
+            )
+        print("🧪 Test mode active: Images will not be saved")
+    else:
+        save_progress = get_yes_no("Save progress for resuming?", default=True)
+        debug = debug_mode or get_yes_no("Enable debug output?", default=True)
+        if force_single_threaded:
+            use_multiprocessing = False
+            print("🔄 Single-threaded processing forced by --no-multiprocessing flag")
+        else:
+            use_multiprocessing = get_yes_no(
+                "Use multiprocessing for faster image processing?", default=True
+            )
+
+    # Ask about clearing hash cache
+    clear_hash_cache = get_yes_no(
+        "Clear hash cache from previous runs? (recommended for fresh starts)",
+        default=True,
+    )
 
     # Create config
     config = PipelineConfig(
@@ -227,12 +301,14 @@ def configure_pipeline() -> PipelineConfig:
         use_smart_selection=use_smart_selection,
         max_images=max_images,
         max_tiles_per_image=max_tiles_per_image,
-        tile_size=tile_size or 12,  # Provide default if None
         boring_threshold=boring_threshold,
         output_dir=output_dir,
         tile_output_size=tile_output_size or 512,  # Provide default if None
         save_progress=save_progress,
         debug=debug,
+        test_mode=test_mode,
+        use_multiprocessing=use_multiprocessing,
+        clear_hash_cache=clear_hash_cache,
     )
 
     return config
@@ -252,7 +328,7 @@ def show_config_summary(config: PipelineConfig):
     )
     print(f"Max images:           {config.max_images or 'Unlimited'}")
     print(f"Max tiles per image:  {config.max_tiles_per_image or 'Unlimited'}")
-    print(f"Tile size:            {config.tile_size}x{config.tile_size} squares")
+    print(f"Tile sizes:           Rotating 12x12 (70%), 20x20 (20%), 30x30 (10%)")
     print(f"Boring threshold:     {config.boring_threshold:.1%}")
     print(f"Output directory:     {config.output_dir}")
     print(
@@ -260,6 +336,48 @@ def show_config_summary(config: PipelineConfig):
     )
     print(f"Save progress:        {'✅ Yes' if config.save_progress else '❌ No'}")
     print(f"Debug output:         {'✅ Enabled' if config.debug else '❌ Disabled'}")
+    print(
+        f"Multiprocessing:      {'⚡ Enabled' if config.use_multiprocessing else '🔄 Single-threaded'}"
+    )
+    print(
+        f"Test mode:            {'🧪 Active (no images saved)' if config.test_mode else '💾 Normal (images will be saved)'}"
+    )
+
+
+def load_config_from_progress(output_dir: str) -> Optional[PipelineConfig]:
+    """Load pipeline config from saved progress file"""
+    progress_file = Path(output_dir) / "pipeline_progress.json"
+    if not progress_file.exists():
+        return None
+
+    try:
+        with open(progress_file, "r") as f:
+            data = json.load(f)
+
+        config_data = data.get("config", {})
+        if not config_data:
+            return None
+
+        # Create PipelineConfig from saved data
+        config = PipelineConfig(
+            sources=config_data.get("sources", []),
+            use_smart_selection=config_data.get("use_smart_selection", True),
+            max_images=config_data.get("max_images"),
+            max_tiles_per_image=config_data.get("max_tiles_per_image"),
+            boring_threshold=config_data.get("boring_threshold", 0.5),
+            output_dir=config_data.get("output_dir", output_dir),
+            tile_output_size=config_data.get("tile_output_size", 512),
+            temp_dir=config_data.get("temp_dir"),
+            save_progress=config_data.get("save_progress", True),
+            debug=config_data.get("debug", True),
+            test_mode=config_data.get("test_mode", False),
+            use_multiprocessing=config_data.get("use_multiprocessing", True),
+            clear_hash_cache=config_data.get("clear_hash_cache", True),
+        )
+        return config
+    except Exception as e:
+        print(f"❌ Error loading config from progress: {e}")
+        return None
 
 
 def check_for_existing_progress(output_dir: str) -> bool:
@@ -270,15 +388,38 @@ def check_for_existing_progress(output_dir: str) -> bool:
 
 def main():
     """Main interactive function"""
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="Battlemap Processing Pipeline")
+    parser.add_argument(
+        "--no-saved-images",
+        action="store_true",
+        help="Test mode: run pipeline without saving images (like count_tiles.py)",
+    )
+    parser.add_argument(
+        "--no-multiprocessing",
+        action="store_true",
+        help="Disable multiprocessing and use single-threaded processing",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug output with detailed processing information",
+    )
+    args = parser.parse_args()
+
     print("🗺️  Battlemap Processing Pipeline")
     print("═══════════════════════════════════")
     print("Generate training tiles from battlemap images")
     print("Supports Google Drive, zip files, and local directories")
 
+    if args.no_saved_images:
+        print("🧪 TEST MODE: Images will not be saved (--no-saved-images flag active)")
+        print()
+
     try:
-        # Check for existing progress first
+        # Check for existing progress first (skip in test mode)
         default_output = "generated_images"
-        if check_for_existing_progress(default_output):
+        if not args.no_saved_images and check_for_existing_progress(default_output):
             resume = get_yes_no(
                 f"📁 Found existing progress in '{default_output}'. Resume from where you left off?",
                 default=True,
@@ -287,24 +428,29 @@ def main():
             if resume:
                 print()
                 print("▶️ Resuming from saved progress...")
-                # Load existing config and run
-                config = PipelineConfig(
-                    sources=[], output_dir=default_output
-                )  # Will be loaded from progress
-                pipeline = BattlemapPipeline(config)
-                if pipeline.resume_from_progress():
-                    print("✅ Progress loaded successfully")
-                    print()
-                    print("🚀 Continuing pipeline processing...")
-                    stats = pipeline.run()
-                    print()
-                    print("🎉 Pipeline completed!")
-                    return
+                # Load existing config from progress file
+                config = load_config_from_progress(default_output)
+                if config is None:
+                    print("❌ Could not load config from progress. Starting fresh...")
                 else:
-                    print("❌ Could not load progress. Starting fresh...")
+                    pipeline = BattlemapPipeline(config)
+                    if pipeline.resume_from_progress():
+                        print("✅ Progress loaded successfully")
+                        print()
+                        print("🚀 Continuing pipeline processing...")
+                        stats = pipeline.run()
+                        print()
+                        print("🎉 Pipeline completed!")
+                        return
+                    else:
+                        print("❌ Could not load progress. Starting fresh...")
 
         # Configure new pipeline
-        config = configure_pipeline()
+        config = configure_pipeline(
+            test_mode=args.no_saved_images,
+            force_single_threaded=args.no_multiprocessing,
+            debug_mode=args.debug,
+        )
 
         # Show summary and confirm
         show_config_summary(config)
@@ -354,4 +500,9 @@ def main():
 
 
 if __name__ == "__main__":
+    # Required for multiprocessing on Windows
+    import multiprocessing
+
+    multiprocessing.freeze_support()
+
     main()
