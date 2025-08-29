@@ -137,9 +137,6 @@ training_captions/
 validation_prompts.txt
 validation_prompts.json
 *_prompts.txt
-# Validation prompt images and seed outputs
-validation_prompt_images/
-seed*.png
 # Wilderness dataset packages
 wilderness_dataset_package/
 # Packaging and preparation scripts outputs
