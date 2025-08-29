@@ -1,0 +1,102 @@
+=== UPDATED VOCABULARY ANALYSIS REPORT ===
+
+Total images processed: 5733
+
+TERRAIN:
+  grassland: 1617
+  path: 1040
+  clearing: 1023
+  forest: 842
+  cave: 582
+  river: 511
+  street: 437
+  coastline: 350
+  garden: 339
+  cliffs: 236
+  plaza: 170
+  ruins: 142
+  desert: 128
+  lake: 97
+  swamp: 66
+  sewer: 29
+
+FEATURES:
+  boulder: 3407
+  bush: 2170
+  tree: 2139
+  barrel: 1255
+  table: 1067
+  pool: 906
+  wall: 836
+  debris: 525
+  crate: 475
+  chair: 459
+  bench: 417
+  cart: 370
+  lantern: 353
+  pond: 315
+  desk: 292
+  stair: 291
+  root: 231
+  dock: 222
+  torch: 209
+  crystal: 190
+  stump: 188
+  gear: 184
+  chest: 171
+  fountain: 169
+  campfire: 169
+  bridge: 162
+  bed: 161
+  cobweb: 144
+  altar: 139
+  bookshelf: 129
+  mushroom: 122
+  bone: 116
+  boat: 110
+  workbench: 110
+  vine: 105
+  corridor: 104
+  well: 102
+  door: 96
+  waterfall: 88
+  ladder: 84
+  tool: 83
+  grate: 79
+  pit: 77
+  rubble: 77
+  fence: 68
+  chandelier: 62
+  tent: 59
+  window: 55
+  statue: 54
+  bloodstain: 52
+  chain: 52
+  pillar: 46
+  chasm: 42
+  anvil: 38
+  rail tracks: 37
+  pipe: 32
+  skull: 26
+  brazier: 26
+  candlestick: 24
+  tile mosaic: 23
+  sarcophagus: 23
+  rug: 20
+  gate: 12
+  forge: 10
+  trap: 6
+  barricade: 6
+  tapestry: 5
+  rope: 3
+  archway: 2
+  secret door: 2
+  lever: 1
+  buoy: 1
+
+SCENE_TYPE:
+  wilderness: 3554
+  interior: 792
+  dungeon: 694
+  settlement: 693
+

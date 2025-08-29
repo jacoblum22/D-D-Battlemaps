@@ -28,7 +28,6 @@ class Caption:
     features: List[str]
     scene_type: str
     style: str
-    grid: str
     extras: List[str]
     attributes: Optional[Dict[str, List[str]]] = None
     image_path: str = ""
@@ -66,7 +65,6 @@ class ControlledVocabularyCaptioner:
         "coastline",
         "river",
         "lake",
-        "waterfall",
         "lava",
         "cave",
         "cliffs",
@@ -127,25 +125,33 @@ class ControlledVocabularyCaptioner:
         "lever",
         "mushrooms",
         "pipe",
+        "pillar",
         "pit",
+        "pond",
+        "pool",
         "pulley",
         "rail tracks",
         "rope",
         "roots",
         "rubble",
         "rug",
+        "sarcophagus",
         "secret door",
+        "skull",
         "stairs",
         "statue",
+        "stump",
         "table",
         "tapestry",
         "tent",
         "tile mosaic",
+        "tools",
         "torch",
         "trap",
         "tree",
         "vines",
         "wall",
+        "waterfall",
         "well",
         "window",
         "workbench",
@@ -211,6 +217,7 @@ class ControlledVocabularyCaptioner:
         "rock": "boulder",  # Normalize rock to boulder
         "rocks": "boulder",
         "stone": "boulder",
+        "stones": "boulder",
         "torches": "torch",
         "torch sconce": "torch",
         "windows": "window",
@@ -246,6 +253,39 @@ class ControlledVocabularyCaptioner:
         "train tracks": "rail tracks",
         "crystal": "crystals",
         "mushroom": "mushrooms",
+        # Water feature normalizations
+        "pools": "pool",
+        "water pool": "pool",
+        "ponds": "pond",
+        "water pond": "pond",
+        "waterfalls": "waterfall",
+        "water fall": "waterfall",
+        # Tool normalizations
+        "tool": "tools",
+        "workshop tools": "tools",
+        "crafting tools": "tools",
+        # Death/dungeon feature normalizations
+        "skulls": "skull",
+        "human skull": "skull",
+        "animal skull": "skull",
+        "sarcophagi": "sarcophagus",
+        "coffin": "sarcophagus",  # Normalize coffin to sarcophagus
+        "coffins": "sarcophagus",
+        # Tree feature normalizations
+        "stumps": "stump",
+        "tree stump": "stump",
+        "log": "stump",  # Tree logs could be stumps
+        "logs": "stump",
+        # Additional feature alignment mappings
+        "fire": "torch",
+        "flame": "torch",
+        "flames": "torch",
+        "gem": "crystals",
+        "gems": "crystals",
+        "pillar": "pillar",  # Add pillar to features if not already there
+        "column": "pillar",
+        "columns": "pillar",
+        "pillars": "pillar",
         # Original normalization mappings
         "walls": "wall",
         "stone wall": "wall",
@@ -283,16 +323,22 @@ class ControlledVocabularyCaptioner:
         "dim": ("lighting", "dim"),
         "bright": ("lighting", "bright"),
         "glowing": ("lighting", "glow"),
+        "warm": ("lighting", "warm"),
         "broken": ("condition", "broken"),
         "damaged": ("condition", "damaged"),
         "ruined": ("condition", "ruined"),
         "cracked": ("condition", "cracked"),
+        "twisted": ("condition", "twisted"),
+        "organic": ("material", "organic"),
         "raised": ("elevation", "raised"),
         "sunken": ("elevation", "sunken"),
         "elevated": ("elevation", "raised"),
         "roofed": ("coverage", "roofed"),
         "covered": ("coverage", "covered"),
         "roof": ("coverage", "roofed"),
+        "mystical": ("magical", "mystical"),
+        "colorful": ("appearance", "colorful"),
+        "stained": ("condition", "stained"),
     }
 
     def __init__(self, api_key: Optional[str] = None):
@@ -334,14 +380,48 @@ scene_type = [{scene_types_str}]
 
 Output this exact JSON:
 {{
-  "description": "<1–2 natural sentences; do not repeat the words 'battle map'>",
+  "description": "<1–2 natural sentences; describe as a top-down battlemap tile>",
   "terrain": ["<1-2 from terrain list - the general environment>"],
   "features": ["<3–6 from features list - specific objects/details>"],
   "scene_type": "<1 from scene_type list - the specific location type>",
-  "style": "<art style or mapping tool if identifiable, else 'digital painting'>",
-  "grid": "<yes or no>",
+  "style": "<art style or mapping tool if identifiable, else 'digital battlemap'>",
   "extras": ["<free-text items not in the lists, optional>"],
   "attributes": {{"<category>": ["<descriptive terms>"]}}
+}}
+
+EXAMPLES:
+
+Forest clearing with pond:
+{{
+  "description": "A vibrant forest clearing surrounds a small pond, with lush foliage and colorful flowers creating a peaceful battlemap scene.",
+  "terrain": ["forest"],
+  "features": ["bench", "bush", "pond", "tree"],
+  "scene_type": "clearing",
+  "style": "digital battlemap",
+  "extras": [],
+  "attributes": {{"color": ["vibrant", "colorful"], "lighting": ["dappled", "natural"], "density": ["lush"], "condition": ["peaceful"]}}
+}}
+
+Lava landscape:
+{{
+  "description": "A fiery top-down view reveals molten lava flows through rocky terrain, with a carved stone face overlooking the scene.",
+  "terrain": ["lava"],
+  "features": ["boulder", "statue", "wall"],
+  "scene_type": "wilderness", 
+  "style": "digital battlemap",
+  "extras": [],
+  "attributes": {{"condition": ["carved", "rocky"], "lighting": ["fiery", "glowing"], "material": ["molten"]}}
+}}
+
+Urban street scene:
+{{
+  "description": "This urban battlemap shows a network of streets and buildings, with cobblestone paths and illuminated corners from above.",
+  "terrain": ["street"],
+  "features": ["lantern", "wall"],
+  "scene_type": "street",
+  "style": "digital battlemap",
+  "extras": ["building"],
+  "attributes": {{"lighting": ["illuminated", "bright"], "material": ["cobblestone"], "density": ["urban"]}}
 }}
 
 Rules:
@@ -349,13 +429,29 @@ Rules:
 - Terrain = broad environment/setting (forest, interior, etc.), Features = discrete objects/props, Scene_type = functional purpose of the space
 - For outdoor areas without specific buildings, use scene_type like "wilderness", "road", "clearing"
 - If a term can belong to multiple fields, prefer: scene_type > terrain > features when it names the primary identity of the location (e.g., dungeon, tavern, sewer)
+- Always describe from a top-down perspective appropriate for battlemap use
+- Use "digital battlemap" as default style unless clearly identifiable otherwise
+
+TERRAIN DISTINCTION RULES:
+- "path" = outdoor walkways without walls (dirt paths, stone paths, forest trails)
+- "corridor" = indoor passages with walls (dungeon hallways, building corridors)
+
+WATER FEATURE DISTINCTIONS:
+- "fountain" = artificial decorative water feature with pumps/spouts
+- "pool" = artificial contained water (swimming pools, ritual pools)
+- "pond" = natural small body of standing water
+- "waterfall" = flowing water falling from height
+- Use "lake" or "river" as terrain only for large water bodies that dominate the scene
+
 - Lowercase; singular nouns; sort arrays alphabetically; no duplicates.
 - AVOID "unknown" scene_type - always try to find the closest match from the scene_type list
 - If a term is missing from the vocabulary, choose the closest related term; only use extras when nothing is reasonably close
-- Move descriptive words to attributes (e.g., glow → lighting, broken → condition)
+- Move descriptive words to attributes (e.g., glow → lighting, broken → condition, twisted → condition, organic → material)
 - Features should be 3-6 items maximum.
-- Grid should be "yes" if you can see a grid overlay, "no" otherwise.
-- Description should be natural and engaging, not just a list of features.
+- Description should reference the top-down/battlemap perspective naturally (but this is optional - only ~30% need explicit style markers).
+- Attributes should include 2-3 categories: lighting (dim, glowing, bright), condition (ruined, overgrown, cracked), color (vibrant, green, grey), density (dense, sparse, crowded), material (stone, wood, metal).
+- Each attribute category should have 1-3 specific tags for richness.
+- Ensure all major objects mentioned in description also appear in features list.
 
 Analyze this image:"""
 
@@ -374,7 +470,7 @@ Analyze this image:"""
 
             # Create the request
             response = self.client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o-mini",
                 messages=[
                     {
                         "role": "user",
@@ -393,14 +489,14 @@ Analyze this image:"""
                 temperature=0.1,  # Low temperature for consistency
             )
 
-            # Calculate cost (GPT-4o pricing as of 2024)
-            # Input: $5.00 per 1M tokens, Output: $15.00 per 1M tokens
+            # Calculate cost (GPT-4o-mini pricing as of 2024)
+            # Input: $0.15 per 1M tokens, Output: $0.60 per 1M tokens
             input_tokens = response.usage.prompt_tokens if response.usage else 0
             output_tokens = response.usage.completion_tokens if response.usage else 0
             total_tokens = input_tokens + output_tokens
 
-            cost_usd = (input_tokens * 5.00 / 1_000_000) + (
-                output_tokens * 15.00 / 1_000_000
+            cost_usd = (input_tokens * 0.15 / 1_000_000) + (
+                output_tokens * 0.60 / 1_000_000
             )
 
             # Parse the response
@@ -428,17 +524,17 @@ Analyze this image:"""
                 print(f"Raw response: {content}")
                 return None, total_tokens, cost_usd
 
-            # Create Caption object
+            # Create Caption object with normalized path
+            normalized_image_path = image_path.replace("\\", "/")
             caption = Caption(
                 description=caption_data.get("description", ""),
                 terrain=caption_data.get("terrain", []),
                 features=caption_data.get("features", []),
                 scene_type=caption_data.get("scene_type", ""),
                 style=caption_data.get("style", ""),
-                grid=caption_data.get("grid", ""),
                 extras=caption_data.get("extras", []),
                 attributes=caption_data.get("attributes", {}),
-                image_path=image_path,
+                image_path=normalized_image_path,
                 raw_response=content,
             )
 
@@ -509,44 +605,505 @@ Analyze this image:"""
 
         return normalized, oov_terms, attributes
 
+    def smart_reclassify_terms(self, caption: Caption) -> Caption:
+        """Intelligently move misclassified terms to their correct categories."""
+
+        # Create working copies
+        terrain = list(caption.terrain)
+        features = list(caption.features)
+        scene_type = caption.scene_type
+        extras = list(caption.extras)
+
+        # Define categorization rules
+        terrain_terms = set(self.TERRAIN)
+        features_terms = set(self.FEATURES)
+        scene_type_terms = set(self.SCENE_TYPES)
+
+        # Function to move term between lists
+        def move_term(term: str, from_list: List[str], to_list: List[str]) -> bool:
+            """Move term from one list to another if found."""
+            normalized_term = self.CANONICAL_TERMS.get(
+                term.lower().strip(), term.lower().strip()
+            )
+            if normalized_term in from_list:
+                from_list.remove(normalized_term)
+                if normalized_term not in to_list:
+                    to_list.append(normalized_term)
+                return True
+            return False
+
+        # Check all lists for misplaced terms and move them
+        all_terms_to_check = set()
+        all_terms_to_check.update([t.lower().strip() for t in terrain])
+        all_terms_to_check.update([t.lower().strip() for t in features])
+        all_terms_to_check.update([scene_type.lower().strip()] if scene_type else [])
+        all_terms_to_check.update([t.lower().strip() for t in extras])
+
+        for term in all_terms_to_check:
+            normalized_term = self.CANONICAL_TERMS.get(term, term)
+
+            # Skip empty terms
+            if not normalized_term:
+                continue
+
+            # If it's a terrain term, ensure it's in terrain
+            if normalized_term in terrain_terms:
+                # Remove from wrong places
+                if normalized_term in features:
+                    features.remove(normalized_term)
+                if normalized_term == scene_type:
+                    scene_type = "unknown"  # Will be fixed later
+                if normalized_term in extras:
+                    extras.remove(normalized_term)
+                # Add to terrain if not already there
+                if normalized_term not in terrain:
+                    terrain.append(normalized_term)
+
+            # If it's a features term, ensure it's in features
+            elif normalized_term in features_terms:
+                # Remove from wrong places
+                if normalized_term in terrain:
+                    terrain.remove(normalized_term)
+                if normalized_term == scene_type:
+                    scene_type = "unknown"  # Will be fixed later
+                if normalized_term in extras:
+                    extras.remove(normalized_term)
+                # Add to features if not already there
+                if normalized_term not in features:
+                    features.append(normalized_term)
+
+            # If it's a scene_type term, ensure it's the scene_type
+            elif normalized_term in scene_type_terms:
+                # Remove from wrong places
+                if normalized_term in terrain:
+                    terrain.remove(normalized_term)
+                if normalized_term in features:
+                    features.remove(normalized_term)
+                if normalized_term in extras:
+                    extras.remove(normalized_term)
+                # Set as scene_type (prioritize over unknown)
+                if scene_type == "unknown" or not scene_type:
+                    scene_type = normalized_term
+
+        # If scene_type is still unknown, try to infer from context
+        if scene_type == "unknown" or not scene_type:
+            # Simple heuristics for common cases
+            if "interior" in terrain:
+                if any(term in features for term in ["altar", "throne"]):
+                    scene_type = "throne room"
+                elif any(term in features for term in ["bed", "chest"]):
+                    scene_type = "inn"
+                elif any(term in features for term in ["bookshelf", "desk"]):
+                    scene_type = "study"
+                else:
+                    scene_type = "dungeon"  # Default for interior
+            elif any(t in terrain for t in ["forest", "grassland", "cliffs"]):
+                scene_type = "wilderness"
+            elif "street" in terrain:
+                scene_type = "street"
+            elif "sewer" in terrain:
+                scene_type = "sewer"
+            else:
+                scene_type = "wilderness"  # Default fallback
+
+        # Create new caption with reclassified terms
+        return Caption(
+            description=caption.description,
+            terrain=sorted(list(set(terrain))),  # Remove duplicates and sort
+            features=sorted(list(set(features))),
+            scene_type=scene_type,
+            style=caption.style,
+            extras=sorted(list(set(extras))),
+            attributes=caption.attributes,
+            image_path=caption.image_path,
+            raw_response=caption.raw_response,
+        )
+
     def normalize_caption(self, caption: Caption) -> Tuple[Caption, List[str]]:
         """Normalize a caption and extract OOV terms."""
+        # First, intelligently reclassify misplaced terms
+        reclassified_caption = self.smart_reclassify_terms(caption)
+
         all_oov = []
-        combined_attributes = caption.attributes.copy() if caption.attributes else {}
+        combined_attributes = (
+            reclassified_caption.attributes.copy()
+            if reclassified_caption.attributes
+            else {}
+        )
 
         # Normalize terrain
         terrain, terrain_oov, terrain_attrs = self.normalize_terms(
-            caption.terrain, self.terrain_set
+            reclassified_caption.terrain, self.terrain_set
         )
         all_oov.extend(terrain_oov)
         self._merge_attributes(combined_attributes, terrain_attrs)
 
         # Normalize features
         features, features_oov, features_attrs = self.normalize_terms(
-            caption.features, self.features_set
+            reclassified_caption.features, self.features_set
         )
         all_oov.extend(features_oov)
         self._merge_attributes(combined_attributes, features_attrs)
 
         # Normalize scene_type
-        scene_type = caption.scene_type.strip().lower()
+        scene_type = reclassified_caption.scene_type.strip().lower()
         scene_type = self.CANONICAL_TERMS.get(scene_type, scene_type)
         if scene_type not in self.scene_types_set:
             all_oov.append(scene_type)
             scene_type = "unknown"
 
-        # Create normalized caption
+        # Create normalized caption with improved post-processing
+        description = reclassified_caption.description
+
+        # 1. STYLE MARKERS: Only add battlemap/top-down to ~30% of captions randomly
+        import random
+
+        add_style_markers = random.random() < 0.30
+
+        if add_style_markers:
+            has_battlemap = "battlemap" in description.lower()
+            has_topdown = (
+                "top-down" in description.lower() or "top down" in description.lower()
+            )
+
+            if not has_battlemap and not has_topdown:
+                # Add both if neither is present
+                description = (
+                    description.rstrip(".") + " shown in this top-down battlemap view."
+                )
+            elif not has_battlemap:
+                # Just add battlemap
+                if (
+                    "top-down" in description.lower()
+                    or "top down" in description.lower()
+                ):
+                    description = description.replace(
+                        "top-down", "top-down battlemap"
+                    ).replace("top down", "top-down battlemap")
+                else:
+                    description = (
+                        description.rstrip(".") + " as seen in this battlemap."
+                    )
+            elif not has_topdown:
+                # Just add top-down
+                description = description.replace("battlemap", "top-down battlemap")
+
+        # 2. SCENE TYPE CONSISTENCY: Improve cave/dungeon classification
+        if scene_type == "unknown" or not scene_type:
+            # Apply improved scene type rules
+            if "cave" in terrain:
+                # Check if it's structured (dungeon) or natural (wilderness)
+                structured_keywords = [
+                    "temple",
+                    "ruins",
+                    "mine",
+                    "chamber",
+                    "hall",
+                    "room",
+                    "passage",
+                    "corridor",
+                ]
+                natural_keywords = [
+                    "cavern",
+                    "grotto",
+                    "natural",
+                    "wild",
+                    "exploration",
+                ]
+
+                description_lower = description.lower()
+                has_structured = any(
+                    keyword in description_lower for keyword in structured_keywords
+                )
+                has_natural = any(
+                    keyword in description_lower for keyword in natural_keywords
+                )
+
+                if has_structured or any(
+                    f in features
+                    for f in ["altar", "chest", "throne", "statue", "pillar"]
+                ):
+                    scene_type = "dungeon"
+                else:
+                    scene_type = "wilderness"
+            elif "interior" in terrain:
+                if any(term in features for term in ["altar", "throne"]):
+                    scene_type = "throne room"
+                elif any(term in features for term in ["bed", "chest"]):
+                    scene_type = "inn"
+                elif any(term in features for term in ["bookshelf", "desk"]):
+                    scene_type = "study"
+                else:
+                    scene_type = "dungeon"
+            elif any(t in terrain for t in ["forest", "grassland", "cliffs"]):
+                scene_type = "wilderness"
+            elif "street" in terrain:
+                scene_type = "street"
+            elif "sewer" in terrain:
+                scene_type = "sewer"
+            else:
+                scene_type = "wilderness"
+
+        # 3. FEATURE-DESCRIPTION ALIGNMENT: Extract key nouns from description
+        import re
+
+        description_words = re.findall(r"\b\w+\b", description.lower())
+
+        # Key nouns that should be in features if mentioned
+        potential_features = {
+            "lava": "lava",
+            "water": "pool",
+            "fire": "torch",
+            "flame": "torch",
+            "crystal": "crystals",
+            "gem": "crystals",
+            "rock": "boulder",
+            "stone": "boulder",
+            "altar": "altar",
+            "throne": "throne",
+            "chest": "chest",
+            "statue": "statue",
+            "pillar": "pillar",
+            "column": "pillar",
+            "torch": "torch",
+            "lantern": "lantern",
+            "tree": "tree",
+            "bush": "bush",
+            "flower": "bush",
+            "plant": "bush",
+            "wall": "wall",
+            "door": "door",
+            "gate": "gate",
+            "fence": "fence",
+            "pool": "pool",
+            "pond": "pond",
+            "fountain": "fountain",
+            "well": "well",
+            "bridge": "bridge",
+            "stairs": "stairs",
+            "ladder": "ladder",
+            "barrel": "barrel",
+            "crate": "crates",
+            "table": "table",
+            "chair": "chair",
+        }
+
+        # Add missing features that are mentioned in description
+        additional_features = []
+        for word in description_words:
+            if word in potential_features:
+                mapped_feature = potential_features[word]
+                if (
+                    mapped_feature in self.features_set
+                    and mapped_feature not in features
+                ):
+                    additional_features.append(mapped_feature)
+
+        # Merge additional features (keeping limit of 6 total)
+        all_features = features + additional_features
+        features = sorted(list(set(all_features)))[:6]
+
+        # 4. ATTRIBUTE RICHNESS: Ensure 2-3 attribute categories with multiple tags
+        # Extract more attributes from description
+        additional_attributes = {}
+
+        # Lighting attributes
+        lighting_terms = {
+            "glowing": "glowing",
+            "bright": "bright",
+            "dim": "dim",
+            "dark": "dim",
+            "illuminated": "bright",
+            "torch-lit": "torch-lit",
+            "moonlit": "moonlit",
+            "shadowy": "dim",
+            "fiery": "fiery",
+            "radiant": "bright",
+            "warm": "warm",
+            "soft": "soft",
+            "natural": "natural",
+            "daylight": "daylight",
+            "sunlit": "bright",
+        }
+
+        # Condition attributes
+        condition_terms = {
+            "ruined": "ruined",
+            "broken": "broken",
+            "cracked": "cracked",
+            "overgrown": "overgrown",
+            "mossy": "mossy",
+            "flooded": "flooded",
+            "treacherous": "treacherous",
+            "jagged": "jagged",
+            "smooth": "smooth",
+            "weathered": "weathered",
+            "ancient": "ancient",
+            "worn": "worn",
+            "mysterious": "mysterious",
+            "peaceful": "peaceful",
+            "rustic": "rustic",
+            "well-maintained": "well-maintained",
+            "scattered": "scattered",
+            "twisted": "twisted",
+            "natural": "natural",
+            "lush": "lush",
+            "dense": "dense",
+            "sandy": "sandy",
+        }
+
+        # Color attributes
+        color_terms = {
+            "green": "green",
+            "red": "red",
+            "blue": "blue",
+            "grey": "grey",
+            "gray": "grey",
+            "brown": "brown",
+            "golden": "golden",
+            "silver": "silver",
+            "black": "black",
+            "white": "white",
+            "colorful": "colorful",
+            "vibrant": "vibrant",
+            "lush": "green",
+        }
+
+        # Density/scale attributes
+        density_terms = {
+            "dense": "dense",
+            "thick": "dense",
+            "sparse": "sparse",
+            "crowded": "crowded",
+            "sprawling": "sprawling",
+            "vast": "vast",
+            "narrow": "narrow",
+            "wide": "wide",
+            "bustling": "crowded",
+            "lively": "crowded",
+        }
+
+        # Material attributes
+        material_terms = {
+            "stone": "stone",
+            "wooden": "wood",
+            "wood": "wood",
+            "metal": "metal",
+            "iron": "metal",
+            "cobblestone": "stone",
+            "rocky": "stone",
+            "molten": "molten",
+        }
+
+        # Extract attributes from description
+        for word in description_words:
+            if word in lighting_terms:
+                if "lighting" not in additional_attributes:
+                    additional_attributes["lighting"] = []
+                if lighting_terms[word] not in additional_attributes["lighting"]:
+                    additional_attributes["lighting"].append(lighting_terms[word])
+
+            if word in condition_terms:
+                if "condition" not in additional_attributes:
+                    additional_attributes["condition"] = []
+                if condition_terms[word] not in additional_attributes["condition"]:
+                    additional_attributes["condition"].append(condition_terms[word])
+
+            if word in color_terms:
+                if "color" not in additional_attributes:
+                    additional_attributes["color"] = []
+                if color_terms[word] not in additional_attributes["color"]:
+                    additional_attributes["color"].append(color_terms[word])
+
+            if word in density_terms:
+                if "density" not in additional_attributes:
+                    additional_attributes["density"] = []
+                if density_terms[word] not in additional_attributes["density"]:
+                    additional_attributes["density"].append(density_terms[word])
+
+            if word in material_terms:
+                if "material" not in additional_attributes:
+                    additional_attributes["material"] = []
+                if material_terms[word] not in additional_attributes["material"]:
+                    additional_attributes["material"].append(material_terms[word])
+
+        # Merge attributes
+        for category, values in additional_attributes.items():
+            if category not in combined_attributes:
+                combined_attributes[category] = []
+            for value in values:
+                if value not in combined_attributes[category]:
+                    combined_attributes[category].append(value)
+
+        # Ensure at least 2-3 attribute categories with multiple tags if we have fewer
+        if len(combined_attributes) < 2:
+            # Add default attributes based on terrain/scene/features
+            if "lava" in terrain and "lighting" not in combined_attributes:
+                combined_attributes["lighting"] = ["fiery", "glowing"]
+            if (
+                any(t in terrain for t in ["forest", "grassland"])
+                and "color" not in combined_attributes
+            ):
+                combined_attributes["color"] = ["green", "natural"]
+            if "cave" in terrain and "lighting" not in combined_attributes:
+                combined_attributes["lighting"] = ["dim", "shadowy"]
+            if "interior" in terrain and "condition" not in combined_attributes:
+                combined_attributes["condition"] = ["enclosed"]
+            if "street" in terrain and "material" not in combined_attributes:
+                combined_attributes["material"] = ["stone", "cobblestone"]
+            if (
+                any(f in features for f in ["boulder", "wall"])
+                and "material" not in combined_attributes
+            ):
+                combined_attributes["material"] = ["stone"]
+            if (
+                any(f in features for f in ["tree", "bush"])
+                and "color" not in combined_attributes
+            ):
+                combined_attributes["color"] = ["green"]
+
+        # Enhance existing categories to have multiple tags where appropriate
+        for category in combined_attributes:
+            current_tags = combined_attributes[category]
+            if len(current_tags) == 1:
+                # Add complementary tags based on context
+                if category == "lighting":
+                    if "bright" in current_tags:
+                        combined_attributes[category].append("natural")
+                    elif "dim" in current_tags:
+                        combined_attributes[category].append("shadowy")
+                    elif "glow" in current_tags or "glowing" in current_tags:
+                        combined_attributes[category].append("warm")
+                elif category == "condition":
+                    if "natural" in current_tags and any(
+                        t in terrain for t in ["forest", "grassland"]
+                    ):
+                        combined_attributes[category].append("lush")
+                    elif "rugged" in current_tags:
+                        combined_attributes[category].append("rocky")
+                elif category == "color" and "green" in current_tags:
+                    if any(f in features for f in ["tree", "bush"]):
+                        combined_attributes[category].append("vibrant")
+
+        # Ensure we have at least 2 categories
+        if len(combined_attributes) < 2:
+            # Add a generic lighting attribute if missing
+            if "lighting" not in combined_attributes:
+                combined_attributes["lighting"] = ["natural"]
+            # Add a generic condition attribute if still needed
+            if len(combined_attributes) < 2 and "condition" not in combined_attributes:
+                combined_attributes["condition"] = ["well-maintained"]
+
         normalized = Caption(
-            description=caption.description,
+            description=description,
             terrain=terrain,
             features=features,
             scene_type=scene_type,
-            style=caption.style,
-            grid=caption.grid.lower() if caption.grid else "unknown",
-            extras=caption.extras + all_oov,  # Move OOV to extras
+            style=reclassified_caption.style,
+            extras=reclassified_caption.extras + all_oov,  # Move OOV to extras
             attributes=combined_attributes,
-            image_path=caption.image_path,
-            raw_response=caption.raw_response,
+            image_path=reclassified_caption.image_path,
+            raw_response=reclassified_caption.raw_response,
         )
 
         return normalized, all_oov
@@ -583,11 +1140,9 @@ Analyze this image:"""
                         captions = json.load(f)
                     for caption in captions:
                         if isinstance(caption, dict) and "image_path" in caption:
-                            # Normalize path separators
+                            # Normalize path separators and only add the normalized version
                             img_path = caption["image_path"].replace("\\", "/")
                             processed.add(img_path)
-                            # Also add the original format in case of path separator differences
-                            processed.add(caption["image_path"])
                 except (json.JSONDecodeError, KeyError):
                     print(f"Warning: Could not load processed images from {filename}")
                     continue
@@ -645,29 +1200,40 @@ Analyze this image:"""
         # Collect all image files
         for folder in root_path.iterdir():
             if folder.is_dir() and not folder.name.startswith("."):
-                # Look for gdrive subfolder
-                gdrive_folder = (
-                    folder / f"gdrive_{folder.name.split('_')[0]}"
-                    if "gdrive_" not in folder.name
-                    else folder
-                )
-                if not gdrive_folder.exists():
-                    # Try other common patterns
-                    subfolders = [f for f in folder.iterdir() if f.is_dir()]
-                    if subfolders:
-                        gdrive_folder = subfolders[0]  # Take the first subfolder
-
-                if gdrive_folder.exists():
-                    for img_file in gdrive_folder.glob("*.png"):
-                        img_path = str(img_file)
-                        if not exclude_processed or img_path not in processed_images:
-                            image_paths.append(img_path)
-                else:
-                    # Look directly in the folder
+                # Look for gdrive subfolders - process ALL gdrive folders in the directory
+                if "gdrive_" in folder.name:
+                    # This folder itself is a gdrive folder
                     for img_file in folder.glob("*.png"):
                         img_path = str(img_file)
                         if not exclude_processed or img_path not in processed_images:
                             image_paths.append(img_path)
+                else:
+                    # Look for ALL subfolders starting with "gdrive_"
+                    gdrive_folders = [
+                        f
+                        for f in folder.iterdir()
+                        if f.is_dir() and f.name.startswith("gdrive_")
+                    ]
+
+                    if gdrive_folders:
+                        # Process images in ALL gdrive subfolders
+                        for gdrive_folder in gdrive_folders:
+                            for img_file in gdrive_folder.glob("*.png"):
+                                img_path = str(img_file)
+                                if (
+                                    not exclude_processed
+                                    or img_path not in processed_images
+                                ):
+                                    image_paths.append(img_path)
+                    else:
+                        # If no gdrive subfolders found, look directly in the folder
+                        for img_file in folder.glob("*.png"):
+                            img_path = str(img_file)
+                            if (
+                                not exclude_processed
+                                or img_path not in processed_images
+                            ):
+                                image_paths.append(img_path)
 
         print(f"Found {len(image_paths)} unprocessed images available")
 

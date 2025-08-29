@@ -25,6 +25,7 @@ from dataclasses import dataclass
 # Try to import Google Drive handler
 try:
     from .google_drive_handler import GoogleDriveHandler
+
     GOOGLE_DRIVE_AVAILABLE = True
 except ImportError:
     GOOGLE_DRIVE_AVAILABLE = False
@@ -39,28 +40,40 @@ logger = logging.getLogger(__name__)
 
 class ImageSourceError(Exception):
     """Base exception for image source handling errors"""
+
     pass
 
 
 class UnsafeZipError(ImageSourceError):
     """Raised when a zip file contains unsafe paths (zip-slip attack)"""
+
     pass
 
 
 class DownloadError(ImageSourceError):
     """Raised when download operations fail"""
+
     pass
 
 
 @dataclass
 class ImageInfo:
     """Information about a found image"""
+
     path: str  # Full path to the image file
     filename: str  # Just the filename
     source_type: str  # 'google_drive', 'zip_file', 'local'
     relative_path: str  # Path relative to source root
     size_bytes: Optional[int] = None  # File size if available
     source_url: Optional[str] = None  # Original source URL
+
+    # Smart selector metadata for grid detection logic
+    has_dimensions: bool = False  # Whether filename contains dimensions
+    is_gridless: bool = False  # Whether this is a gridless variant
+    is_gridded: bool = False  # Whether this is a gridded variant
+    gridded_variant_path: Optional[str] = None  # Path to gridded variant for detection
+    gridded_variant_filename: Optional[str] = None  # Filename of gridded variant
+    has_both_variants: bool = False  # Whether both gridded and gridless variants exist
 
 
 class ImageSourceHandler:
@@ -71,15 +84,26 @@ class ImageSourceHandler:
     def __init__(self, temp_dir: Optional[str] = None, request_timeout: int = 30):
         self.temp_dir = temp_dir or tempfile.gettempdir()
         self.request_timeout = request_timeout  # Default 30 second timeout
-        self.image_extensions = {'.png', '.jpg', '.jpeg', '.webp', '.bmp', '.gif', '.tiff', '.tif'}
+        self.image_extensions = {
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".webp",
+            ".bmp",
+            ".gif",
+            ".tiff",
+            ".tif",
+        }
         self.session = requests.Session()
-        self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        })
-        
+        self.session.headers.update(
+            {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            }
+        )
+
         # Initialize smart image selector
         self.smart_selector = SmartImageSelector()
-        
+
         # Initialize Google Drive handler if available
         self.google_drive_handler = None
         if GOOGLE_DRIVE_AVAILABLE and GoogleDriveHandler:
@@ -92,54 +116,65 @@ class ImageSourceHandler:
     def _generate_unique_filename(self, base_name: str, source: str) -> str:
         """Generate a unique filename based on source to avoid collisions"""
         # Create a hash of the source for uniqueness
-        source_hash = hashlib.md5(source.encode('utf-8')).hexdigest()[:8]
+        source_hash = hashlib.md5(source.encode("utf-8")).hexdigest()[:8]
         return f"{base_name}_{source_hash}"
 
-    def _safe_extract_member(self, zip_ref: zipfile.ZipFile, member: zipfile.ZipInfo, extract_dir: str) -> str:
+    def _safe_extract_member(
+        self, zip_ref: zipfile.ZipFile, member: zipfile.ZipInfo, extract_dir: str
+    ) -> str:
         """Safely extract a zip member, preventing zip-slip attacks"""
         # Normalize the member path
         member_path = os.path.normpath(member.filename)
-        
+
         # Check for directory traversal attempts
-        if member_path.startswith('/') or '..' in member_path:
+        if member_path.startswith("/") or ".." in member_path:
             raise UnsafeZipError(f"Unsafe path in zip: {member.filename}")
-        
+
         # Ensure the extracted path is within the target directory
         target_path = os.path.join(extract_dir, member_path)
         target_path = os.path.normpath(target_path)
-        
+
         if not target_path.startswith(os.path.abspath(extract_dir)):
-            raise UnsafeZipError(f"Path would extract outside target directory: {member.filename}")
-        
+            raise UnsafeZipError(
+                f"Path would extract outside target directory: {member.filename}"
+            )
+
         # Create directories if needed
         target_dir = os.path.dirname(target_path)
         if target_dir:
             os.makedirs(target_dir, exist_ok=True)
-        
+
         # Extract the file
-        with zip_ref.open(member) as source, open(target_path, 'wb') as target:
+        with zip_ref.open(member) as source, open(target_path, "wb") as target:
             shutil.copyfileobj(source, target)
-        
+
         return target_path
 
-    def _safe_extract_all(self, zip_ref: zipfile.ZipFile, extract_dir: str) -> List[str]:
+    def _safe_extract_all(
+        self, zip_ref: zipfile.ZipFile, extract_dir: str
+    ) -> List[str]:
         """Safely extract all files from zip, preventing zip-slip attacks"""
         extracted_files = []
-        
+
         for member in zip_ref.filelist:
             if not member.is_dir():
                 try:
-                    extracted_path = self._safe_extract_member(zip_ref, member, extract_dir)
+                    extracted_path = self._safe_extract_member(
+                        zip_ref, member, extract_dir
+                    )
                     extracted_files.append(extracted_path)
                 except UnsafeZipError as e:
                     logger.warning(f"Skipping unsafe zip member: {e}")
                     continue
-        
+
         return extracted_files
 
     def find_images_from_source(
-        self, source: str, debug: bool = False, list_only: bool = True, 
-        use_smart_selection: bool = True
+        self,
+        source: str,
+        debug: bool = False,
+        list_only: bool = True,
+        use_smart_selection: bool = True,
     ) -> List[ImageInfo]:
         """
         Find all images from a source (Google Drive URL, zip file, or local path)
@@ -163,39 +198,70 @@ class ImageSourceHandler:
 
         source = source.strip()
 
+        # Strip quotes that might be around the source path
+        if source.startswith('"') and source.endswith('"'):
+            source = source[1:-1]
+        elif source.startswith("'") and source.endswith("'"):
+            source = source[1:-1]
+
         try:
             # Get initial image list
             images = self._get_images_from_source_internal(source, debug, list_only)
-            
+
             # Apply smart selection if requested
             if use_smart_selection and images:
                 if debug:
                     print(f"\n🧠 Applying smart image selection...")
                     print(f"Found {len(images)} total images")
-                
+
                 # Convert ImageInfo to dict format for smart selector
                 image_dicts = [
-                    {
-                        'path': img.path,
-                        'filename': img.filename
-                    }
-                    for img in images
+                    {"path": img.path, "filename": img.filename} for img in images
                 ]
-                
+
                 # Apply smart selection
                 selected_dicts = self.smart_selector.select_optimal_images(image_dicts)
-                
+
                 if debug:
                     print(f"Selected {len(selected_dicts)} optimal images:")
                     for sel in selected_dicts:
-                        reason = sel.get('selection_reason', 'unknown')
-                        variants = sel.get('total_variants', 1)
-                        print(f"  📁 {sel['filename']} (reason: {reason}, variants: {variants})")
-                
-                # Create new ImageInfo objects for selected images
-                selected_paths = {sel['path'] for sel in selected_dicts}
-                images = [img for img in images if img.path in selected_paths]
-            
+                        reason = sel.get("selection_reason", "unknown")
+                        variants = sel.get("total_variants", 1)
+                        print(
+                            f"  📁 {sel['filename']} (reason: {reason}, variants: {variants})"
+                        )
+
+                # Create new ImageInfo objects for selected images with smart selector metadata
+                selected_paths = {sel["path"] for sel in selected_dicts}
+                # Create a lookup for smart selector metadata
+                metadata_lookup = {sel["path"]: sel for sel in selected_dicts}
+
+                # Filter and enhance images with smart selector metadata
+                enhanced_images = []
+                for img in images:
+                    if img.path in selected_paths:
+                        metadata = metadata_lookup[img.path]
+                        # Create enhanced ImageInfo with smart selector metadata
+                        enhanced_img = ImageInfo(
+                            path=img.path,
+                            filename=img.filename,
+                            source_type=img.source_type,
+                            relative_path=img.relative_path,
+                            size_bytes=img.size_bytes,
+                            source_url=img.source_url,
+                            has_dimensions=metadata.get("has_dimensions", False),
+                            is_gridless=metadata.get("is_gridless", False),
+                            is_gridded=metadata.get("is_gridded", False),
+                            gridded_variant_path=metadata.get("gridded_variant_path"),
+                            gridded_variant_filename=metadata.get(
+                                "gridded_variant_filename"
+                            ),
+                            has_both_variants=metadata.get("has_both_variants", False),
+                        )
+                        enhanced_images.append(enhanced_img)
+
+                images = enhanced_images
+
             return images
 
         except (ImageSourceError, requests.RequestException) as e:
@@ -233,22 +299,22 @@ class ImageSourceHandler:
                 if debug:
                     print("Detected: Google Drive URL")
                 return self._handle_google_drive(source, debug, list_only)
-            
+
             elif self._is_zip_source(source):
                 if debug:
                     print("Detected: Zip file")
                 return self._handle_zip_file(source, debug, list_only)
-            
+
             elif os.path.isdir(source):
                 if debug:
                     print("Detected: Local directory")
                 return self._handle_local_directory(source, debug, list_only)
-            
+
             elif os.path.isfile(source):
                 if debug:
                     print("Detected: Local file")
                 return self._handle_single_file(source, debug, list_only)
-            
+
             else:
                 # Try as URL for zip or image
                 if debug:
@@ -263,13 +329,12 @@ class ImageSourceHandler:
 
     def _is_google_drive_url(self, url: str) -> bool:
         """Check if URL is a Google Drive link"""
-        return 'drive.google.com' in url.lower()
+        return "drive.google.com" in url.lower()
 
     def _is_zip_source(self, source: str) -> bool:
         """Check if source appears to be a zip file"""
-        return (
-            source.lower().endswith('.zip') or
-            (source.startswith(('http://', 'https://')) and '.zip' in source.lower())
+        return source.lower().endswith(".zip") or (
+            source.startswith(("http://", "https://")) and ".zip" in source.lower()
         )
 
     def _handle_google_drive(
@@ -282,7 +347,9 @@ class ImageSourceHandler:
         # Check if Google Drive handler is available
         if not self.google_drive_handler:
             if debug:
-                print("❌ Google Drive API not available - falling back to basic method")
+                print(
+                    "❌ Google Drive API not available - falling back to basic method"
+                )
             return self._handle_google_drive_fallback(url, debug, list_only)
 
         try:
@@ -313,10 +380,10 @@ class ImageSourceHandler:
             if self.google_drive_handler.is_folder(file_id):
                 if debug:
                     print("📁 Processing Google Drive folder...")
-                
+
                 # List images in folder (true list-only for folders!)
                 image_files = self.google_drive_handler.list_images_in_folder(file_id)
-                
+
                 if debug:
                     print(f"�️ Found {len(image_files)} images in folder")
 
@@ -324,11 +391,15 @@ class ImageSourceHandler:
                     # For list-only mode, create virtual paths
                     if list_only:
                         path = f"gdrive://{img_file['id']}"
-                        size_bytes = img_file.get('size', 0)
+                        size_bytes = img_file.get("size", 0)
                     else:
                         # For full mode, download the file
-                        temp_file = os.path.join(self.temp_dir, f"gdrive_{img_file['id']}_{img_file['name']}")
-                        if self.google_drive_handler.download_file(img_file['id'], temp_file):
+                        temp_file = os.path.join(
+                            self.temp_dir, f"gdrive_{img_file['id']}_{img_file['name']}"
+                        )
+                        if self.google_drive_handler.download_file(
+                            img_file["id"], temp_file
+                        ):
                             path = temp_file
                             size_bytes = os.path.getsize(temp_file)
                         else:
@@ -336,14 +407,18 @@ class ImageSourceHandler:
                                 print(f"❌ Failed to download {img_file['name']}")
                             continue
 
-                    images.append(ImageInfo(
-                        path=path,
-                        filename=img_file['name'],
-                        source_type="google_drive",
-                        relative_path=img_file['path'],
-                        size_bytes=size_bytes if not list_only else img_file.get('size', 0),
-                        source_url=url
-                    ))
+                    images.append(
+                        ImageInfo(
+                            path=path,
+                            filename=img_file["name"],
+                            source_type="google_drive",
+                            relative_path=img_file["path"],
+                            size_bytes=(
+                                size_bytes if not list_only else img_file.get("size", 0)
+                            ),
+                            source_url=url,
+                        )
+                    )
 
             # Handle individual files
             else:
@@ -351,21 +426,28 @@ class ImageSourceHandler:
                     print("📄 Processing individual Google Drive file...")
 
                 # Check if it's an image
-                mime_type = file_info.get('mimeType', '')
-                if not any(img_type in mime_type for img_type in ['image/', 'png', 'jpg', 'jpeg', 'webp']):
+                mime_type = file_info.get("mimeType", "")
+                if not any(
+                    img_type in mime_type
+                    for img_type in ["image/", "png", "jpg", "jpeg", "webp"]
+                ):
                     if debug:
                         print(f"❌ File is not an image: {mime_type}")
                     return []
 
-                filename = file_info.get('name', f"gdrive_file_{file_id}")
-                
+                filename = file_info.get("name", f"gdrive_file_{file_id}")
+
                 if list_only:
                     # List-only mode for individual files
                     path = f"gdrive://{file_id}"
-                    size_bytes = int(file_info.get('size', 0)) if file_info.get('size') else 0
+                    size_bytes = (
+                        int(file_info.get("size", 0)) if file_info.get("size") else 0
+                    )
                 else:
                     # Full mode - download the file
-                    temp_file = os.path.join(self.temp_dir, f"gdrive_{file_id}_{filename}")
+                    temp_file = os.path.join(
+                        self.temp_dir, f"gdrive_{file_id}_{filename}"
+                    )
                     if self.google_drive_handler.download_file(file_id, temp_file):
                         path = temp_file
                         size_bytes = os.path.getsize(temp_file)
@@ -374,14 +456,16 @@ class ImageSourceHandler:
                             print(f"❌ Failed to download {filename}")
                         return []
 
-                images.append(ImageInfo(
-                    path=path,
-                    filename=filename,
-                    source_type="google_drive",
-                    relative_path=filename,
-                    size_bytes=size_bytes,
-                    source_url=url
-                ))
+                images.append(
+                    ImageInfo(
+                        path=path,
+                        filename=filename,
+                        source_type="google_drive",
+                        relative_path=filename,
+                        size_bytes=size_bytes,
+                        source_url=url,
+                    )
+                )
 
             return images
 
@@ -400,7 +484,7 @@ class ImageSourceHandler:
             print("⚠️  Limited functionality without Google Drive API")
 
         try:
-            # Extract file/folder ID from URL  
+            # Extract file/folder ID from URL
             file_id = self._extract_google_drive_id(url)
             if not file_id:
                 if debug:
@@ -409,49 +493,57 @@ class ImageSourceHandler:
 
             if debug:
                 print(f"📁 Google Drive ID: {file_id}")
-                print("⚠️  Note: This method only works for individual files, not folders")
+                print(
+                    "⚠️  Note: This method only works for individual files, not folders"
+                )
 
             # Try direct download (only works for individual files)
             download_url = f"https://drive.google.com/uc?id={file_id}&export=download"
-            
+
             temp_file = os.path.join(self.temp_dir, f"gdrive_fallback_{file_id}")
-            
+
             if debug:
                 print(f"💾 Attempting download to: {temp_file}")
 
-            response = self.session.get(download_url, stream=True, timeout=self.request_timeout)
-            
+            response = self.session.get(
+                download_url, stream=True, timeout=self.request_timeout
+            )
+
             if response.status_code == 200:
-                with open(temp_file, 'wb') as f:
+                with open(temp_file, "wb") as f:
                     for chunk in response.iter_content(chunk_size=8192):
                         f.write(chunk)
 
                 if self._is_image_file(temp_file):
                     if debug:
                         print("🖼️ Downloaded file is an image")
-                    
+
                     size_bytes = os.path.getsize(temp_file) if not list_only else None
                     filename = f"gdrive_image_{file_id}"
-                    
+
                     # For list_only, clean up immediately
                     if list_only:
                         os.remove(temp_file)
                         temp_file = f"gdrive://{file_id}"
-                    
-                    return [ImageInfo(
-                        path=temp_file,
-                        filename=filename,
-                        source_type="google_drive",
-                        relative_path=filename,
-                        size_bytes=size_bytes,
-                        source_url=url
-                    )]
+
+                    return [
+                        ImageInfo(
+                            path=temp_file,
+                            filename=filename,
+                            source_type="google_drive",
+                            relative_path=filename,
+                            size_bytes=size_bytes,
+                            source_url=url,
+                        )
+                    ]
                 else:
                     if debug:
                         print("❓ Downloaded file is not an image")
             else:
                 if debug:
-                    print(f"❌ Download failed with status code: {response.status_code}")
+                    print(
+                        f"❌ Download failed with status code: {response.status_code}"
+                    )
 
         except Exception as e:
             logger.error(f"Error handling Google Drive URL (fallback): {e}")
@@ -463,16 +555,16 @@ class ImageSourceHandler:
     def _extract_google_drive_id(self, url: str) -> Optional[str]:
         """Extract file/folder ID from Google Drive URL"""
         patterns = [
-            r'/file/d/([a-zA-Z0-9_-]+)',  # /file/d/{id}/view
-            r'/folders/([a-zA-Z0-9_-]+)',  # /folders/{id}
-            r'[?&]id=([a-zA-Z0-9_-]+)',   # ?id={id}
+            r"/file/d/([a-zA-Z0-9_-]+)",  # /file/d/{id}/view
+            r"/folders/([a-zA-Z0-9_-]+)",  # /folders/{id}
+            r"[?&]id=([a-zA-Z0-9_-]+)",  # ?id={id}
         ]
-        
+
         for pattern in patterns:
             match = re.search(pattern, url)
             if match:
                 return match.group(1)
-        
+
         return None
 
     def _handle_zip_file(
@@ -484,27 +576,33 @@ class ImageSourceHandler:
 
         try:
             temp_zip = None
-            
-            if source.startswith(('http://', 'https://')):
+
+            if source.startswith(("http://", "https://")):
                 # Remote zip file - use unique filename to avoid collisions
                 if debug:
                     print("🌐 Downloading remote zip file...")
-                
-                unique_filename = self._generate_unique_filename("remote_archive.zip", source)
+
+                unique_filename = self._generate_unique_filename(
+                    "remote_archive.zip", source
+                )
                 temp_zip = os.path.join(self.temp_dir, unique_filename)
-                
+
                 try:
-                    response = self.session.get(source, stream=True, timeout=self.request_timeout)
-                    
+                    response = self.session.get(
+                        source, stream=True, timeout=self.request_timeout
+                    )
+
                     if response.status_code == 200:
-                        with open(temp_zip, 'wb') as f:
+                        with open(temp_zip, "wb") as f:
                             for chunk in response.iter_content(chunk_size=8192):
                                 f.write(chunk)
                         zip_path = temp_zip
                     else:
                         if debug:
                             print(f"❌ Failed to download zip: {response.status_code}")
-                        raise DownloadError(f"Failed to download zip file: HTTP {response.status_code}")
+                        raise DownloadError(
+                            f"Failed to download zip file: HTTP {response.status_code}"
+                        )
                 except requests.RequestException as e:
                     raise DownloadError(f"Network error downloading zip file: {e}")
             else:
@@ -537,32 +635,34 @@ class ImageSourceHandler:
     ) -> List[ImageInfo]:
         """List images in zip file without extracting them"""
         images = []
-        
+
         try:
             if debug:
                 print(f"📋 Listing contents of zip file...")
 
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            with zipfile.ZipFile(zip_path, "r") as zip_ref:
                 for file_info in zip_ref.filelist:
                     # Skip directories
                     if file_info.is_dir():
                         continue
-                    
+
                     filename = file_info.filename
-                    
+
                     # Check if it's an image file
                     if self._is_image_file(filename):
                         # Create virtual path for list-only mode
                         virtual_path = f"zip://{zip_path}#{filename}"
-                        
-                        images.append(ImageInfo(
-                            path=virtual_path,
-                            filename=os.path.basename(filename),
-                            source_type=source_type,
-                            relative_path=filename,
-                            size_bytes=file_info.file_size,
-                            source_url=source_url
-                        ))
+
+                        images.append(
+                            ImageInfo(
+                                path=virtual_path,
+                                filename=os.path.basename(filename),
+                                source_type=source_type,
+                                relative_path=filename,
+                                size_bytes=file_info.file_size,
+                                source_url=source_url,
+                            )
+                        )
 
             if debug:
                 print(f"🖼️ Found {len(images)} images in zip (list-only)")
@@ -579,7 +679,7 @@ class ImageSourceHandler:
     ) -> List[ImageInfo]:
         """Extract zip and find all images recursively using safe extraction"""
         images = []
-        
+
         try:
             # Create temp extraction directory with unique name
             extract_base = self._generate_unique_filename("extracted", zip_path)
@@ -590,7 +690,7 @@ class ImageSourceHandler:
                 print(f"📂 Extracting to: {extract_dir}")
 
             # Safely extract zip file
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            with zipfile.ZipFile(zip_path, "r") as zip_ref:
                 extracted_files = self._safe_extract_all(zip_ref, extract_dir)
 
             if debug:
@@ -601,15 +701,17 @@ class ImageSourceHandler:
                 if self._is_image_file(file_path):
                     file = os.path.basename(file_path)
                     relative_path = os.path.relpath(file_path, extract_dir)
-                    
-                    images.append(ImageInfo(
-                        path=file_path,
-                        filename=file,
-                        source_type=source_type,
-                        relative_path=relative_path,
-                        size_bytes=os.path.getsize(file_path),
-                        source_url=source_url
-                    ))
+
+                    images.append(
+                        ImageInfo(
+                            path=file_path,
+                            filename=file,
+                            source_type=source_type,
+                            relative_path=relative_path,
+                            size_bytes=os.path.getsize(file_path),
+                            source_url=source_url,
+                        )
+                    )
 
             if debug:
                 print(f"🖼️ Found {len(images)} images in zip")
@@ -634,27 +736,29 @@ class ImageSourceHandler:
             print("📁 Processing local directory...")
 
         images = []
-        
+
         try:
             for root, dirs, files in os.walk(directory):
                 for file in files:
                     if self._is_image_file(file):
                         file_path = os.path.join(root, file)
                         relative_path = os.path.relpath(file_path, directory)
-                        
+
                         # Only get file size if not in list_only mode
                         size_bytes = None
                         if not list_only:
                             size_bytes = os.path.getsize(file_path)
-                        
-                        images.append(ImageInfo(
-                            path=file_path,
-                            filename=file,
-                            source_type="local",
-                            relative_path=relative_path,
-                            size_bytes=size_bytes,
-                            source_url=directory
-                        ))
+
+                        images.append(
+                            ImageInfo(
+                                path=file_path,
+                                filename=file,
+                                source_type="local",
+                                relative_path=relative_path,
+                                size_bytes=size_bytes,
+                                source_url=directory,
+                            )
+                        )
 
             if debug:
                 print(f"🖼️ Found {len(images)} images in directory")
@@ -676,20 +780,22 @@ class ImageSourceHandler:
         if self._is_image_file(file_path):
             if debug:
                 print("🖼️ File is an image")
-            
+
             # Only get file size if not in list_only mode
             size_bytes = None
             if not list_only:
                 size_bytes = os.path.getsize(file_path)
-            
-            return [ImageInfo(
-                path=file_path,
-                filename=os.path.basename(file_path),
-                source_type="local",
-                relative_path=os.path.basename(file_path),
-                size_bytes=size_bytes,
-                source_url=file_path
-            )]
+
+            return [
+                ImageInfo(
+                    path=file_path,
+                    filename=os.path.basename(file_path),
+                    source_type="local",
+                    relative_path=os.path.basename(file_path),
+                    size_bytes=size_bytes,
+                    source_url=file_path,
+                )
+            ]
         else:
             if debug:
                 print("❌ File is not an image")
@@ -704,63 +810,83 @@ class ImageSourceHandler:
 
         try:
             # Try downloading as zip first
-            if '.zip' in url.lower():
+            if ".zip" in url.lower():
                 return self._handle_zip_file(url, debug, list_only)
-            
+
             # For direct image URLs in list_only mode, we can just check headers
             if list_only:
                 if debug:
                     print("🔍 Checking URL headers without downloading...")
-                
+
                 # HEAD request to check content type without downloading
                 response = self.session.head(url, timeout=self.request_timeout)
                 if response.status_code == 200:
-                    content_type = response.headers.get('content-type', '').lower()
-                    if any(img_type in content_type for img_type in ['image/', 'png', 'jpg', 'jpeg', 'webp']):
+                    content_type = response.headers.get("content-type", "").lower()
+                    if any(
+                        img_type in content_type
+                        for img_type in ["image/", "png", "jpg", "jpeg", "webp"]
+                    ):
                         filename = os.path.basename(urlparse(url).path) or "url_image"
-                        size_bytes = int(response.headers.get('content-length', 0)) or None
-                        
+                        size_bytes = (
+                            int(response.headers.get("content-length", 0)) or None
+                        )
+
                         if debug:
                             print(f"🖼️ URL is an image (content-type: {content_type})")
-                        
-                        return [ImageInfo(
-                            path=f"url://{url}",
-                            filename=filename,
-                            source_type="url",
-                            relative_path=filename,
-                            size_bytes=size_bytes,
-                            source_url=url
-                        )]
+
+                        return [
+                            ImageInfo(
+                                path=f"url://{url}",
+                                filename=filename,
+                                source_type="url",
+                                relative_path=filename,
+                                size_bytes=size_bytes,
+                                source_url=url,
+                            )
+                        ]
                     else:
                         if debug:
-                            print(f"❓ URL content-type is not an image: {content_type}")
+                            print(
+                                f"❓ URL content-type is not an image: {content_type}"
+                            )
                         return []
             else:
                 # Full download for non-list mode
-                temp_file = os.path.join(self.temp_dir, self._generate_unique_filename("downloaded_file", url))
-                
+                temp_file = os.path.join(
+                    self.temp_dir,
+                    self._generate_unique_filename("downloaded_file", url),
+                )
+
                 try:
-                    response = self.session.get(url, stream=True, timeout=self.request_timeout)
-                    
+                    response = self.session.get(
+                        url, stream=True, timeout=self.request_timeout
+                    )
+
                     if response.status_code == 200:
-                        with open(temp_file, 'wb') as f:
+                        with open(temp_file, "wb") as f:
                             for chunk in response.iter_content(chunk_size=8192):
                                 f.write(chunk)
 
                         if self._is_image_file(temp_file):
                             if debug:
                                 print("🖼️ Downloaded file is an image")
-                            return [ImageInfo(
-                                path=temp_file,
-                                filename=os.path.basename(urlparse(url).path) or "downloaded_image",
-                                source_type="url",
-                                relative_path=os.path.basename(urlparse(url).path) or "downloaded_image",
-                                size_bytes=os.path.getsize(temp_file),
-                                source_url=url
-                            )]
+                            return [
+                                ImageInfo(
+                                    path=temp_file,
+                                    filename=os.path.basename(urlparse(url).path)
+                                    or "downloaded_image",
+                                    source_type="url",
+                                    relative_path=os.path.basename(urlparse(url).path)
+                                    or "downloaded_image",
+                                    size_bytes=os.path.getsize(temp_file),
+                                    source_url=url,
+                                )
+                            ]
                     else:
-                        raise DownloadError(f"Failed to download from URL: HTTP {response.status_code}")
-                        
+                        raise DownloadError(
+                            f"Failed to download from URL: HTTP {response.status_code}"
+                        )
+
                 except requests.RequestException as e:
                     raise DownloadError(f"Network error downloading from URL: {e}")
 
@@ -778,20 +904,24 @@ class ImageSourceHandler:
     def cleanup_temp_files(self, debug: bool = False):
         """Clean up any temporary files created during processing"""
         if debug:
-            print("🧹 Cleaning up temporary files...")
-        
-        # This is a basic cleanup - in a production system you might want
-        # more sophisticated temp file management
+            print(
+                "🧹 Final cleanup check (individual files already cleaned during processing)..."
+            )
+
+        # Individual temporary files are already cleaned up immediately after each image
+        # This is just a safety net for any remaining temporary directories
         pass
 
-    def download_single_image(self, image_info: ImageInfo, debug: bool = False) -> Optional[str]:
+    def download_single_image(
+        self, image_info: ImageInfo, debug: bool = False
+    ) -> Optional[str]:
         """
         Download a single image to a temporary location for processing
-        
+
         Args:
             image_info: ImageInfo object describing the image to download
             debug: Enable debug output
-        
+
         Returns:
             Path to the downloaded/accessible image file, or None if failed
         """
@@ -799,7 +929,7 @@ class ImageSourceHandler:
             print(f"\n📥 Downloading single image: {image_info.filename}")
             print(f"   Source type: {image_info.source_type}")
             print(f"   Path: {image_info.path}")
-        
+
         try:
             # Handle local files (already accessible)
             if image_info.source_type == "local":
@@ -811,99 +941,124 @@ class ImageSourceHandler:
                     if debug:
                         print(f"❌ Local file not found: {image_info.path}")
                     return None
-            
+
             # Handle Google Drive files
             elif image_info.source_type == "google_drive":
                 if image_info.path.startswith("gdrive://"):
                     # Extract Google Drive file ID
                     file_id = image_info.path.replace("gdrive://", "")
-                    
+
                     if self.google_drive_handler:
                         # Use API to download
-                        temp_file = os.path.join(self.temp_dir, f"pipeline_{file_id}_{image_info.filename}")
+                        temp_file = os.path.join(
+                            self.temp_dir, f"pipeline_{file_id}_{image_info.filename}"
+                        )
                         if self.google_drive_handler.download_file(file_id, temp_file):
                             if debug:
-                                print(f"✅ Downloaded from Google Drive to: {temp_file}")
+                                print(
+                                    f"✅ Downloaded from Google Drive to: {temp_file}"
+                                )
                             return temp_file
                         else:
                             if debug:
-                                print(f"❌ Failed to download from Google Drive: {file_id}")
+                                print(
+                                    f"❌ Failed to download from Google Drive: {file_id}"
+                                )
                             return None
                     else:
                         # Fallback method
-                        download_url = f"https://drive.google.com/uc?id={file_id}&export=download"
-                        temp_file = os.path.join(self.temp_dir, f"pipeline_fallback_{file_id}_{image_info.filename}")
-                        
-                        response = self.session.get(download_url, stream=True, timeout=self.request_timeout)
+                        download_url = (
+                            f"https://drive.google.com/uc?id={file_id}&export=download"
+                        )
+                        temp_file = os.path.join(
+                            self.temp_dir,
+                            f"pipeline_fallback_{file_id}_{image_info.filename}",
+                        )
+
+                        response = self.session.get(
+                            download_url, stream=True, timeout=self.request_timeout
+                        )
                         if response.status_code == 200:
-                            with open(temp_file, 'wb') as f:
+                            with open(temp_file, "wb") as f:
                                 for chunk in response.iter_content(chunk_size=8192):
                                     f.write(chunk)
-                            
+
                             if self._is_image_file(temp_file):
                                 if debug:
-                                    print(f"✅ Downloaded from Google Drive (fallback) to: {temp_file}")
+                                    print(
+                                        f"✅ Downloaded from Google Drive (fallback) to: {temp_file}"
+                                    )
                                 return temp_file
-                        
+
                         if debug:
-                            print(f"❌ Failed to download from Google Drive (fallback): {file_id}")
+                            print(
+                                f"❌ Failed to download from Google Drive (fallback): {file_id}"
+                            )
                         return None
                 else:
                     # Already downloaded file
                     if os.path.exists(image_info.path):
                         if debug:
-                            print(f"✅ Google Drive file already downloaded: {image_info.path}")
+                            print(
+                                f"✅ Google Drive file already downloaded: {image_info.path}"
+                            )
                         return image_info.path
                     else:
                         if debug:
                             print(f"❌ Google Drive file not found: {image_info.path}")
                         return None
-            
+
             # Handle zip files
             elif image_info.source_type == "zip_file":
                 if image_info.path.startswith("zip://"):
                     # Parse zip path format: zip://path/to/archive.zip#internal/path
                     zip_path_info = image_info.path.replace("zip://", "")
-                    if '#' in zip_path_info:
-                        zip_path, internal_path = zip_path_info.split('#', 1)
+                    if "#" in zip_path_info:
+                        zip_path, internal_path = zip_path_info.split("#", 1)
                     else:
                         if debug:
                             print(f"❌ Invalid zip path format: {image_info.path}")
                         return None
-                    
+
                     # Extract single file from zip
-                    temp_file = os.path.join(self.temp_dir, f"pipeline_zip_{image_info.filename}")
-                    
+                    temp_file = os.path.join(
+                        self.temp_dir, f"pipeline_zip_{image_info.filename}"
+                    )
+
                     try:
-                        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                        with zipfile.ZipFile(zip_path, "r") as zip_ref:
                             # Find the member in the zip
                             member = None
                             for m in zip_ref.filelist:
                                 if m.filename == internal_path:
                                     member = m
                                     break
-                            
+
                             if not member:
                                 if debug:
                                     print(f"❌ File not found in zip: {internal_path}")
                                 return None
-                            
+
                             # Use safe extraction for single file
-                            temp_extract_dir = os.path.join(self.temp_dir, "temp_single_extract")
+                            temp_extract_dir = os.path.join(
+                                self.temp_dir, "temp_single_extract"
+                            )
                             os.makedirs(temp_extract_dir, exist_ok=True)
-                            
-                            extracted_path = self._safe_extract_member(zip_ref, member, temp_extract_dir)
-                            
+
+                            extracted_path = self._safe_extract_member(
+                                zip_ref, member, temp_extract_dir
+                            )
+
                             # Move to final location
                             shutil.move(extracted_path, temp_file)
-                            
+
                             # Cleanup temp directory
                             shutil.rmtree(temp_extract_dir, ignore_errors=True)
-                        
+
                         if debug:
                             print(f"✅ Extracted from zip to: {temp_file}")
                         return temp_file
-                    
+
                     except (KeyError, zipfile.BadZipFile, UnsafeZipError) as e:
                         if debug:
                             print(f"❌ Failed to extract from zip: {e}")
@@ -918,26 +1073,32 @@ class ImageSourceHandler:
                         if debug:
                             print(f"❌ Extracted zip file not found: {image_info.path}")
                         return None
-            
+
             # Handle URL files
             elif image_info.source_type == "url":
                 if image_info.path.startswith("url://"):
                     # Extract actual URL
                     actual_url = image_info.path.replace("url://", "")
-                    temp_file = os.path.join(self.temp_dir, f"pipeline_url_{image_info.filename}")
-                    
-                    response = self.session.get(actual_url, stream=True, timeout=self.request_timeout)
+                    temp_file = os.path.join(
+                        self.temp_dir, f"pipeline_url_{image_info.filename}"
+                    )
+
+                    response = self.session.get(
+                        actual_url, stream=True, timeout=self.request_timeout
+                    )
                     if response.status_code == 200:
-                        with open(temp_file, 'wb') as f:
+                        with open(temp_file, "wb") as f:
                             for chunk in response.iter_content(chunk_size=8192):
                                 f.write(chunk)
-                        
+
                         if debug:
                             print(f"✅ Downloaded from URL to: {temp_file}")
                         return temp_file
                     else:
                         if debug:
-                            print(f"❌ Failed to download from URL: {response.status_code}")
+                            print(
+                                f"❌ Failed to download from URL: {response.status_code}"
+                            )
                         return None
                 else:
                     # Already downloaded file
@@ -947,14 +1108,16 @@ class ImageSourceHandler:
                         return image_info.path
                     else:
                         if debug:
-                            print(f"❌ Downloaded URL file not found: {image_info.path}")
+                            print(
+                                f"❌ Downloaded URL file not found: {image_info.path}"
+                            )
                         return None
-            
+
             else:
                 if debug:
                     print(f"❌ Unknown source type: {image_info.source_type}")
                 return None
-        
+
         except Exception as e:
             logger.error(f"Error downloading single image {image_info.filename}: {e}")
             if debug:
@@ -978,7 +1141,7 @@ class ImageSourceHandler:
         for img in images:
             # Count source types
             source_types[img.source_type] = source_types.get(img.source_type, 0) + 1
-            
+
             # Count file extensions
             ext = Path(img.filename).suffix.lower()
             file_extensions[ext] = file_extensions.get(ext, 0) + 1

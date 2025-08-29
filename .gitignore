@@ -48,6 +48,7 @@ desktop.ini
 # Generated outputs
 output/
 generated_images/
+wilderness_images/
 # Default pipeline output folder
 generated_tiles/
 # Test pipeline output - ignore all image formats in specific directories
@@ -70,11 +71,8 @@ test_images/*.tiff
 *_progress.json
 pipeline_progress.json
 
-# Test files (keep folder structure but not large images)
-test_images/*.webp
-test_images/*.png  
-test_images/*.jpg
-test_images/*.jpeg
+# Test files (ignore entire test_images folder and all contents)
+test_images/
 
 # Logs and temporary files
 *.log
@@ -122,7 +120,11 @@ dataset_v1_training/
 # Dataset zip files with timestamps or versioning
 *_dataset_*.zip
 dnd_battlemaps_lora_dataset_*.zip
+wilderness_battlemaps_dataset_*.zip
 *.zip
+# Caption files (large processed caption data)
+phase4_captions*.json
+captions_grassland.json
 # Dataset split files
 train.txt
 val.txt
@@ -133,7 +135,13 @@ test.txt
 training_captions/
 # Generated validation and prompt files
 validation_prompts.txt
+validation_prompts.json
 *_prompts.txt
+# Validation prompt images and seed outputs
+validation_prompt_images/
+seed*.png
+# Wilderness dataset packages
+wilderness_dataset_package/
 # Packaging and preparation scripts outputs
 create_dataset_split*.py
 create_final_dataset_split.py

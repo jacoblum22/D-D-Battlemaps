@@ -1,0 +1,703 @@
+=== MERGED VOCABULARY ANALYSIS REPORT ===
+
+Total images processed: 5733
+
+TERRAIN:
+  grassland: 1617 (28.2%)
+  path: 1040 (18.1%)
+  interior: 913 (15.9%)
+  forest: 842 (14.7%)
+  cave: 582 (10.2%)
+  dungeon: 554 (9.7%)
+  river: 511 (8.9%)
+  street: 437 (7.6%)
+  coastline: 350 (6.1%)
+  garden: 339 (5.9%)
+  cliffs: 236 (4.1%)
+  lava: 195 (3.4%)
+  plaza: 170 (3.0%)
+  snow: 161 (2.8%)
+  ruins: 142 (2.5%)
+  desert: 128 (2.2%)
+  corridor: 104 (1.8%)
+  lake: 97 (1.7%)
+  swamp: 66 (1.2%)
+  ice: 61 (1.1%)
+  sewer: 29 (0.5%)
+  rooftop: 6 (0.1%)
+
+Total unique terrain: 22
+
+FEATURES:
+  boulder: 3407 (59.4%)
+  bush: 2170 (37.9%)
+  tree: 2139 (37.3%)
+  barrel: 1255 (21.9%)
+  table: 1067 (18.6%)
+  pool: 906 (15.8%)
+  wall: 836 (14.6%)
+  debris: 525 (9.2%)
+  crates: 475 (8.3%)
+  chair: 459 (8.0%)
+  bench: 417 (7.3%)
+  cart: 370 (6.5%)
+  lantern: 353 (6.2%)
+  pond: 315 (5.5%)
+  desk: 292 (5.1%)
+  stairs: 291 (5.1%)
+  roots: 231 (4.0%)
+  dock: 222 (3.9%)
+  torch: 209 (3.6%)
+  crystals: 190 (3.3%)
+  stump: 188 (3.3%)
+  gear: 184 (3.2%)
+  chest: 171 (3.0%)
+  fountain: 169 (2.9%)
+  campfire: 169 (2.9%)
+  bridge: 162 (2.8%)
+  bed: 161 (2.8%)
+  grave/death: 151 (2.6%)
+  stone/architecture: 149 (2.6%)
+  cobweb: 144 (2.5%)
+  rails/industrial: 143 (2.5%)
+  altar: 139 (2.4%)
+  bookshelf: 129 (2.3%)
+  mushrooms: 122 (2.1%)
+  boat: 111 (1.9%)
+  fire/light: 111 (1.9%)
+  workbench: 110 (1.9%)
+  smithing/workshop: 106 (1.8%)
+  vines: 105 (1.8%)
+  well: 102 (1.8%)
+  door: 96 (1.7%)
+  waterfall: 88 (1.5%)
+  ladder: 84 (1.5%)
+  pit: 77 (1.3%)
+  rubble: 77 (1.3%)
+  mechanisms/traps: 68 (1.2%)
+  fence: 68 (1.2%)
+  tent: 59 (1.0%)
+  window: 55 (1.0%)
+  bloodstain: 52 (0.9%)
+  fabric/decoration: 25 (0.4%)
+  tile mosaic: 23 (0.4%)
+
+Total unique features: 52
+
+SCENE_TYPE:
+  wilderness: 2929 (51.1%)
+  clearing: 1023 (17.8%)
+  street: 247 (4.3%)
+  underground/dark: 229 (4.0%)
+  tavern: 192 (3.3%)
+  castle/noble: 188 (3.3%)
+  inn: 179 (3.1%)
+  workshop: 173 (3.0%)
+  market: 146 (2.5%)
+  interiors: 143 (2.5%)
+  laboratory: 114 (2.0%)
+  road: 93 (1.6%)
+  camp: 77 (1.3%)
+
+Total unique scene_type: 13
+
+EXTRAS:
+  water: 210 (3.7%)
+  pool: 195 (3.4%)
+  building: 179 (3.1%)
+  structure: 61 (1.1%)
+  grass: 61 (1.1%)
+  light: 57 (1.0%)
+  platform: 44 (0.8%)
+  cobblestone: 36 (0.6%)
+  lily pad: 31 (0.5%)
+  house: 30 (0.5%)
+  stream: 29 (0.5%)
+
+Total unique extras: 11
+
+DROPPED EXTRAS (< 0.5% frequency): 583 terms
+  5ft
+  5ft markings
+  abandoned
+  abandoned buildings
+  abandoned storage
+  abandoned structures
+  abstract pattern
+  airship
+  anchor
+  ancient structures
+  arcane device
+  arena
+  armor
+  bag
+  balcony
+  banner
+  banners
+  bar
+  bar area
+  bar counter
+  barred window
+  barrels
+  basement
+  basin
+  bathroom
+  bathtub
+  beach
+  beam
+  bedroom
+  berries
+  billiard table
+  bird
+  bloodstains
+  blue light
+  blue lights
+  bone
+  bottles
+  boulder
+  bowl
+  box
+  branch
+  branches
+  braziers
+  broken equipment
+  buildings
+  bunk
+  bunk bed
+  bunting
+  burning wreckage
+  burnt ground
+  cabin
+  cactus
+  cake
+  canal
+  candy
+  candy cane
+  cannon
+  cannonball
+  canvas
+  cargo hold
+  carpet
+  central staircase
+  central structure
+  chains
+  chamber
+  character
+  chimney
+  circle
+  circular area
+  circular design
+  circular layout
+  circular pattern
+  circular pit
+  circular platform
+  circular structure
+  city
+  cliff
+  cloud
+  clouds
+  clutter
+  coastal view
+  cobblestone courtyard
+  cobblestone path
+  cobblestone paths
+  cobwebs
+  coin
+  coins
+  colorful flowers
+  colorful lights
+  colorful objects
+  colorful pattern
+  colorful tents
+  compartments
+  compass
+  computer
+  console
+  constructed elements
+  contraption
+  control panel
+  control panels
+  cookie
+  cookies
+  cooking supplies
+  cooking utensils
+  coral
+  corridors
+  cottage
+  couch
+  crack
+  cracked earth
+  cracked floor
+  cracked ground
+  cracked path
+  cracked stone
+  cracked tile
+  cracks
+  crater
+  creature
+  creek
+  crew quarters
+  crop
+  crossbow
+  current
+  dark area
+  dead tree
+  deck
+  decorations
+  decorative banners
+  decorative elements
+  decorative flags
+  decorative flowers
+  decorative items
+  decorative lanterns
+  decorative lighting
+  decorative plant
+  decorative plants
+  decorative ribbons
+  decorative rocks
+  decorative rug
+  decorative stone paths
+  decorative tile
+  digital battlemap
+  dilapidated
+  dilapidated structure
+  dining area
+  dining hall
+  display case
+  dome
+  dormitory
+  dragon emblem
+  dragon statue
+  drink
+  dwarven architecture
+  electric arc
+  ember
+  emblem
+  energy effect
+  engine
+  engine room
+  entrance
+  entrances
+  equipment
+  ethereal lights
+  exhibit
+  eye
+  factory
+  fallen log
+  fallen tree
+  fan
+  farm
+  farmstead
+  festive
+  festive banners
+  festive decorations
+  field
+  fiery pit
+  fire pit
+  fireplace
+  fish
+  flags
+  flickering light
+  floor
+  floor mosaic
+  flora
+  floral debris
+  floral decorations
+  flower bed
+  flower pot
+  flowerbed
+  flowering tree
+  flowers
+  fog
+  food
+  food items
+  footprints
+  formation
+  fortification
+  fortified structure
+  fortress
+  frame
+  frosting
+  frozen lake
+  fruit
+  fungi
+  furnace
+  furnishings
+  furniture
+  futuristic
+  futuristic design
+  futuristic equipment
+  futuristic machinery
+  gauge
+  gazebo
+  gemstones
+  gingerbread
+  glow
+  glowing artifacts
+  glowing circle
+  glowing crystal
+  glowing crystals
+  glowing element
+  glowing elements
+  glowing ember
+  glowing embers
+  glowing fungi
+  glowing orb
+  glowing orbs
+  glowing particles
+  glowing pentagram
+  glowing plants
+  glowing pool
+  glowing runes
+  glowing symbol
+  grave
+  grave marker
+  gravel
+  gravestone
+  graveyard
+  green glow
+  greenery
+  grid
+  hall
+  hand
+  haunted
+  hay
+  headstone
+  hearth
+  hedge
+  helm
+  hexagon
+  hexagon stone
+  hexagonal stone
+  high-tech equipment
+  hole
+  hollow
+  hologram
+  holographic display
+  homestead
+  honeycomb
+  houses
+  iceberg
+  icing
+  ingredients
+  interior space
+  island
+  jellyfish
+  jungle
+  jungle underground
+  keep
+  kitchen area
+  large window
+  lava
+  lava edge
+  lava flow
+  lava vein
+  lavish decor
+  leaf
+  leaves
+  lecture halls
+  level
+  level 3
+  level 6
+  level 7
+  level 8
+  lighting
+  lighting fixtures
+  lightning
+  lightning effect
+  lightning effects
+  lily pads
+  living area
+  lodging rooms
+  logo
+  logs
+  lollipop
+  machine
+  machinery
+  magical artifacts
+  magical circle
+  magical elements
+  magical lights
+  magical orbs
+  magical portal
+  magma pool
+  main hall
+  maintenance shop
+  maintenance tunnels
+  mapvember 2023
+  marker
+  market stalls
+  mast
+  mat
+  maze
+  mechanical
+  mechanical components
+  mechanical device
+  mechanical equipment
+  mechanical structures
+  mechanism
+  message in a bottle
+  meteor
+  mining cart
+  mining company
+  mist
+  monument
+  moss
+  mountain
+  multi-level
+  multiple levels
+  multiple towers
+  mysterious artifacts
+  mysterious vessel
+  mystical elements
+  mystical lights
+  mystical symbols
+  nautical
+  nautical elements
+  nautical equipment
+  navigational tools
+  nest
+  oar
+  ominous shadows
+  open space
+  opening
+  orange berries
+  orange flowers
+  orange fruits
+  orb
+  organic shape
+  ornament
+  ornate tile work
+  outdoor area
+  outdoor seating
+  overgrown
+  overgrown plants
+  overgrown vegetation
+  overlapping stones
+  overturned furniture
+  palm
+  palm tree
+  panel
+  paper
+  papers
+  path
+  pathway
+  patrons
+  pattern
+  paw print
+  pearl
+  pebble
+  piano
+  pickaxe
+  pier
+  pirate ship
+  pirate theme
+  plaid blanket
+  plank
+  planter
+  planting bed
+  plants
+  pole
+  portal
+  post
+  pot
+  private room
+  private rooms
+  propeller
+  pumpkin
+  rain
+  rainbow water
+  reactor
+  red banners
+  red flower
+  red stain
+  red symbol
+  remnants
+  restroom
+  ritual circle
+  rock formation
+  rock wall
+  rocky
+  rocky area
+  rocky cliffs
+  rocky outcrop
+  rocky path
+  rocky terrain
+  roof
+  rooms
+  root
+  rose
+  rustic building
+  rustic structure
+  sack
+  sail
+  sailing equipment
+  sails
+  sand
+  scattered crates
+  scattered debris
+  scattered foliage
+  scattered furniture
+  scattered items
+  scattered materials
+  scattered papers
+  sconce
+  screen
+  seat
+  seating area
+  seating areas
+  seaweed
+  settlement
+  sewer entrance
+  shack
+  shadow
+  shadowfell
+  shadowy figure
+  sheep
+  shelf
+  shell
+  shelves
+  shield
+  ship
+  shipwreck
+  shore
+  shrub
+  signpost
+  skeleton
+  skylight
+  slab
+  slats
+  sleeping quarters
+  sludge
+  slums
+  small house
+  small structure
+  small water feature
+  smoke
+  snail
+  snowfall
+  snowflake
+  snowy backdrop
+  sofa
+  space
+  spaceship
+  spear
+  spider
+  spider web
+  spiderweb
+  spiderwebs
+  spike
+  spiral
+  spiral staircase
+  sprinkles
+  stage
+  stained glass
+  stair
+  staircase
+  stall
+  stalls
+  star
+  starfish
+  stars
+  steampunk
+  stocked bar
+  stone entrance
+  stone path
+  stone pathway
+  stone structure
+  stone structures
+  stone wall
+  stone walls
+  stool
+  storage
+  storage area
+  storage crate
+  storage items
+  stormy weather
+  stove
+  straw
+  striped mat
+  structures
+  sun
+  supplies
+  support
+  surface
+  sword
+  symbol
+  symbols
+  tangled foliage
+  tank
+  teleportation sigil
+  tendril
+  tendrils
+  tentacle
+  text
+  throne
+  tiger
+  tile
+  tiles
+  toilet
+  tomb
+  tombstone
+  tower
+  tower base
+  tower city
+  town
+  tracks
+  train
+  treasure
+  treehouse
+  tub
+  twisted vegetation
+  umbrella
+  underground
+  underwater
+  university
+  upper deck
+  vault
+  vegetable garden
+  vegetables
+  vegetation
+  ventilation
+  village
+  vine
+  void
+  wagon
+  walkway
+  watchtower
+  water basin
+  water channels
+  water edge
+  water fountain
+  water lily
+  water trough
+  waterfront
+  waterway
+  waterwheel
+  wave
+  weapon
+  web
+  webs
+  wheel
+  wheelbarrow
+  whimsical
+  wildflower
+  wildflowers
+  winch
+  winding path
+  windmill
+  wing
+  wire
+  wood
+  wooden building
+  wooden buildings
+  wooden path
+  wooden planks
+  wooden platform
+  wooden structure
+  wooden structures
+  workshop area
+  workspace
+  workstations
+  wreckage
+

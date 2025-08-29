@@ -3,8 +3,10 @@
 Dataset v1.0 Preparation Script
 Creates dataset_v1/ structure with:
 - images/ (512x512 processed images)
-- captions/ (individual .txt files from JSON)
+- captions/ (individual .txt files from structured JSON)
 - meta.jsonl (full JSON per image for auditing)
+
+Updated to work with transformed phase4_captions.json that includes structured data.
 """
 
 import json
@@ -12,26 +14,6 @@ import os
 import shutil
 from pathlib import Path
 from PIL import Image
-import re
-
-
-def clean_json_response(raw_response):
-    """Extract JSON from markdown code block"""
-    # Remove ```json and ``` markers
-    cleaned = re.sub(r"^```json\s*", "", raw_response, flags=re.MULTILINE)
-    cleaned = re.sub(r"\s*```$", "", cleaned, flags=re.MULTILINE)
-    return cleaned.strip()
-
-
-def parse_caption_json(raw_response):
-    """Parse the JSON caption data"""
-    try:
-        cleaned = clean_json_response(raw_response)
-        return json.loads(cleaned)
-    except json.JSONDecodeError as e:
-        print(f"Failed to parse JSON: {e}")
-        print(f"Raw response: {raw_response[:200]}...")
-        return None
 
 
 def format_caption(caption_data):
@@ -77,6 +59,9 @@ def format_caption(caption_data):
         if "coverage" in attrs and attrs["coverage"]:
             coverage_str = ", ".join([c.lower() for c in attrs["coverage"]])
             attr_parts.append(f"coverage({coverage_str})")
+        if "elevation" in attrs and attrs["elevation"]:
+            elevation_str = ", ".join([e.lower() for e in attrs["elevation"]])
+            attr_parts.append(f"elevation({elevation_str})")
 
     if attr_parts:
         parts.append(f"attributes: {', '.join(attr_parts)}")
@@ -147,47 +132,62 @@ def main():
     sample_checks = []
 
     # Load data
-    print("Loading processed images list...")
-    with open("processed_images.json", "r") as f:
-        image_paths = json.load(f)
-
-    print("Loading captions...")
+    print("Loading captions with image paths...")
     with open("phase4_captions.json", "r") as f:
         captions_data = json.load(f)
 
-    print(f"Found {len(image_paths)} images and {len(captions_data)} captions")
-
-    if len(image_paths) != len(captions_data):
-        print("WARNING: Mismatch between number of images and captions!")
-        min_len = min(len(image_paths), len(captions_data))
-        print(f"Using first {min_len} entries")
-        image_paths = image_paths[:min_len]
-        captions_data = captions_data[:min_len]
+    print(f"Found {len(captions_data)} image-caption pairs")
 
     # Process each image-caption pair
     meta_data = []
     successful_count = 0
     failed_count = 0
 
-    for i, (image_path, caption_raw) in enumerate(zip(image_paths, captions_data)):
-        print(f"Processing {i+1}/{len(image_paths)}: {os.path.basename(image_path)}")
-
-        # Parse caption
-        caption_json = parse_caption_json(caption_raw["raw_response"])
-        if not caption_json:
-            warnings.append(
-                f"Failed to parse caption for image {i}: {os.path.basename(image_path)}"
-            )
+    for i, caption_entry in enumerate(captions_data):
+        # Get image path from the caption entry
+        image_path = caption_entry.get("image_path", "")
+        if not image_path:
+            warnings.append(f"Missing image_path in entry {i}")
             failed_count += 1
             continue
 
+        print(f"Processing {i+1}/{len(captions_data)}: {os.path.basename(image_path)}")
+
+        # Early termination check: if we have too many missing fields in the first batch
+        if i == 99 and len(warnings) > 50:  # More than 50% failure rate in first 100
+            print(
+                f"\nERROR: High validation failure rate detected ({len(warnings)} warnings in first 100 files)."
+            )
+            print("Stopping processing to prevent generating incomplete dataset.")
+            print("Please check the caption data structure and validation logic.")
+            return
+
+        # Use the already-parsed structured data
+        caption_json = caption_entry
+
+        # Create unique filename first for error reporting
+        image_filename = f"image_{i:04d}.png"
+        caption_filename = f"image_{i:04d}.txt"
+
         # Check for missing fields
         missing_fields = []
-        for field in ["description", "terrain", "features", "scene_type", "grid"]:
-            if field not in caption_json or not caption_json[field]:
-                missing_fields.append(field)
+        for field in ["description", "terrain", "features", "scene_type"]:
+            if field not in caption_json:
+                missing_fields.append(f"{field} (not present)")
+            elif field == "description" and not caption_json[field]:
+                missing_fields.append(f"{field} (empty)")
+            elif field in ["terrain", "features"] and not isinstance(
+                caption_json[field], list
+            ):
+                missing_fields.append(f"{field} (not a list)")
+            elif field == "scene_type" and not caption_json[field]:
+                missing_fields.append(f"{field} (empty)")
+
         if missing_fields:
-            warnings.append(f"Missing fields in {image_filename}: {missing_fields}")
+            warnings.append(
+                f"Missing/invalid fields in {image_filename}: {missing_fields}"
+            )
+            # Don't skip for empty arrays - they're valid
 
         # Generate formatted caption
         formatted_caption = format_caption(caption_json)
@@ -195,10 +195,6 @@ def main():
             warnings.append(f"Empty caption generated for {image_filename}")
             failed_count += 1
             continue
-
-        # Create unique filename
-        image_filename = f"image_{i:04d}.png"
-        caption_filename = f"image_{i:04d}.txt"
 
         # Copy and resize image
         source_path = base_dir / image_path
@@ -255,7 +251,7 @@ def main():
 
     # Save summary
     summary = {
-        "total_processed": len(image_paths),
+        "total_processed": len(captions_data),
         "successful": successful_count,
         "failed": failed_count,
         "dataset_size": len(meta_data),

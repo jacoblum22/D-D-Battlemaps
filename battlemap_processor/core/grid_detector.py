@@ -191,7 +191,49 @@ class GridDetector:
                 edge_candidates.append((cell_size, nx, ny, width_error, height_error))
 
         if not edge_candidates:
-            return None
+            # No candidates fit within tolerance - create fallback grid
+            # Use a reasonable cell size based on image dimensions
+            target_cells_per_dimension = 15  # Aim for ~15x15 grid as reasonable default
+            fallback_cell_width = W / target_cells_per_dimension
+            fallback_cell_height = H / target_cells_per_dimension
+
+            # Use the smaller dimension to ensure square-ish cells
+            fallback_cell_size = min(fallback_cell_width, fallback_cell_height)
+
+            # Calculate final grid dimensions
+            nx = max(2, int(round(W / fallback_cell_size)))
+            ny = max(2, int(round(H / fallback_cell_size)))
+
+            # Recalculate actual cell dimensions
+            cell_width = W / float(nx)
+            cell_height = H / float(ny)
+
+            # Generate grid edges
+            x_edges = self._generate_grid_edges(W, nx)
+            y_edges = self._generate_grid_edges(H, ny)
+
+            # Return fallback grid with low confidence score
+            result = {
+                "nx": nx,
+                "ny": ny,
+                "cell_width": cell_width,
+                "cell_height": cell_height,
+                "x_edges": x_edges,
+                "y_edges": y_edges,
+                "score": 0.1,  # Low confidence for fallback
+                "size_px": fallback_cell_size,
+                "detection_method": "fallback_grid",
+            }
+
+            # Add filename information if available
+            if filename_dims:
+                result["filename_dimensions"] = filename_dims
+                result["filename_match"] = False  # Fallback doesn't match filename
+            else:
+                result["filename_dimensions"] = None
+                result["filename_match"] = None
+
+            return result
 
         # Use morphological operations to score candidates
         v_map, h_map = self._create_blackhat_maps(gray)
@@ -311,6 +353,46 @@ class GridDetector:
 
         # Both visual and filename detection failed
         return None
+
+    def analyze_grid_possibilities(self, pil_img: Image.Image) -> List[Tuple[int, int]]:
+        """
+        Analyze how many grid possibilities exist based on image dimensions
+        without doing full visual detection. Used by smart image selection.
+
+        Args:
+            pil_img: PIL Image to analyze
+
+        Returns:
+            List of (nx, ny) tuples representing possible grid dimensions
+        """
+        H, W = pil_img.height, pil_img.width
+
+        # Test different cell sizes within reasonable bounds
+        upper_limit = min(self.max_cell_px, min(W, H))
+        cell_sizes = list(range(self.min_cell_px, upper_limit + 1, self.step_px))
+
+        edge_candidates = []
+        for cell_size in cell_sizes:
+            # Compute grid dimensions
+            nx = round(W / float(cell_size))
+            ny = round(H / float(cell_size))
+
+            # Check if this gives reasonable dimensions
+            if nx >= 5 and ny >= 5 and nx <= 100 and ny <= 100:
+                # Calculate actual cell dimensions and errors
+                actual_cell_width = W / float(nx)
+                actual_cell_height = H / float(ny)
+                width_error = abs(actual_cell_width - cell_size)
+                height_error = abs(actual_cell_height - cell_size)
+
+                # Only accept if error is small
+                if (
+                    width_error <= self.edge_tolerance_px
+                    and height_error <= self.edge_tolerance_px
+                ):
+                    edge_candidates.append((nx, ny))
+
+        return edge_candidates
 
     def _create_blackhat_maps(self, gray: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """Create morphological blackhat maps to highlight grid lines"""

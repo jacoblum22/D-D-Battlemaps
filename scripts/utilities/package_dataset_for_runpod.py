@@ -29,6 +29,177 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def format_caption(caption_data):
+    """
+    Format caption according to user's specification:
+    <description>. terrain: t1, t2, t3. features: f1, f2, f3, f4. scene_type: <scene>.
+    attributes: lighting(l1, l2), condition(c1), coverage(k1). grid: <yes|no>.
+    """
+    if not caption_data:
+        return ""
+
+    parts = []
+
+    # Description
+    if "description" in caption_data:
+        parts.append(caption_data["description"])
+
+    # Terrain
+    if "terrain" in caption_data and caption_data["terrain"]:
+        terrain_str = ", ".join([t.lower() for t in caption_data["terrain"]])
+        parts.append(f"terrain: {terrain_str}")
+
+    # Features
+    if "features" in caption_data and caption_data["features"]:
+        features_str = ", ".join([f.lower() for f in caption_data["features"]])
+        parts.append(f"features: {features_str}")
+
+    # Scene type
+    if "scene_type" in caption_data and caption_data["scene_type"]:
+        scene_type = caption_data["scene_type"].lower()
+        parts.append(f"scene_type: {scene_type}")
+
+    # Attributes
+    attr_parts = []
+    if "attributes" in caption_data and caption_data["attributes"]:
+        attrs = caption_data["attributes"]
+        if "lighting" in attrs and attrs["lighting"]:
+            lighting_str = ", ".join([l.lower() for l in attrs["lighting"]])
+            attr_parts.append(f"lighting({lighting_str})")
+        if "condition" in attrs and attrs["condition"]:
+            condition_str = ", ".join([c.lower() for c in attrs["condition"]])
+            attr_parts.append(f"condition({condition_str})")
+        if "coverage" in attrs and attrs["coverage"]:
+            coverage_str = ", ".join([c.lower() for c in attrs["coverage"]])
+            attr_parts.append(f"coverage({coverage_str})")
+        if "elevation" in attrs and attrs["elevation"]:
+            elevation_str = ", ".join([e.lower() for e in attrs["elevation"]])
+            attr_parts.append(f"elevation({elevation_str})")
+
+    if attr_parts:
+        parts.append(f"attributes: {', '.join(attr_parts)}")
+
+    # Grid
+    if "grid" in caption_data and caption_data["grid"]:
+        grid_val = caption_data["grid"].lower()
+        parts.append(f"grid: {grid_val}")
+
+    return ". ".join(parts) + "."
+
+
+def normalize_path_for_matching(path):
+    """Normalize path by handling common encoding corruption"""
+    # Common character replacements for encoding issues
+    replacements = {
+        "château": "ch�teau",
+        "è": "�",
+        "é": "�",
+        "ê": "�",
+        "à": "�",
+        "â": "�",
+        "ù": "�",
+        "û": "�",
+        "ô": "�",
+        "ç": "�",
+        "î": "�",
+        "ï": "�",
+        "ü": "�",
+        "ë": "�",
+        "ö": "�",
+    }
+
+    normalized = path
+    for correct, corrupted in replacements.items():
+        normalized = normalized.replace(correct, corrupted)
+
+    return normalized
+
+
+def find_matching_caption(image_path, caption_lookup, all_captions):
+    """Find matching caption with fallback strategies"""
+    # Try exact match first
+    if image_path in caption_lookup:
+        return caption_lookup[image_path]
+
+    # Try normalized path matching (handle encoding corruption)
+    normalized_path = normalize_path_for_matching(image_path)
+    if normalized_path != image_path and normalized_path in caption_lookup:
+        return caption_lookup[normalized_path]
+
+    # Try reverse: normalize the lookup keys and match against original path
+    for caption_entry in all_captions:
+        if "image_path" in caption_entry:
+            entry_path = caption_entry["image_path"]
+            if normalize_path_for_matching(entry_path) == image_path:
+                return caption_entry
+
+    # Last resort: fuzzy matching on filename only
+    image_filename = (
+        image_path.split("/")[-1] if "/" in image_path else image_path.split("\\")[-1]
+    )
+    for caption_entry in all_captions:
+        if "image_path" in caption_entry:
+            entry_path = caption_entry["image_path"]
+            entry_filename = (
+                entry_path.split("/")[-1]
+                if "/" in entry_path
+                else entry_path.split("\\")[-1]
+            )
+            if (
+                image_filename == entry_filename
+                or normalize_path_for_matching(entry_filename) == image_filename
+            ):
+                return caption_entry
+
+    return None
+
+
+def find_actual_image_file(image_path):
+    """Find the actual image file, handling encoding mismatches"""
+    # Try the original path first
+    source_path = Path(image_path)
+    if source_path.exists():
+        return source_path
+
+    # Try with normalized path (reverse of what we did for captions)
+    # The caption may have been normalized FROM the file path, so reverse it
+    reversed_replacements = {
+        "ch�teau": "château",
+        "�": "è",
+        "�": "é",
+        "�": "ê",
+        "�": "à",
+        "�": "â",
+        "�": "ù",
+        "�": "û",
+        "�": "ô",
+        "�": "ç",
+        "�": "î",
+        "�": "ï",
+        "�": "ü",
+        "�": "ë",
+        "�": "ö",
+    }
+
+    reversed_path = image_path
+    for corrupted, correct in reversed_replacements.items():
+        reversed_path = reversed_path.replace(corrupted, correct)
+
+    if reversed_path != image_path:
+        source_path = Path(reversed_path)
+        if source_path.exists():
+            return source_path
+
+    # Try the normalized version (in case the file has corrupted characters)
+    normalized_path = normalize_path_for_matching(image_path)
+    if normalized_path != image_path:
+        source_path = Path(normalized_path)
+        if source_path.exists():
+            return source_path
+
+    return None
+
+
 def load_split_files():
     """Load the train/val/test split files"""
     splits = {}
@@ -47,30 +218,97 @@ def load_split_files():
 
 def load_training_captions():
     """Load the formatted training captions and match them with split files"""
+    # Load the merged captions JSON file
+    captions_file = "phase4_captions_restored_merged.json"
+    if not os.path.exists(captions_file):
+        raise FileNotFoundError(f"Caption file {captions_file} not found!")
+
+    logger.info(f"Loading captions from {captions_file}...")
+
+    # Try multiple encodings to handle Unicode issues
+    encodings_to_try = ["utf-8", "utf-8-sig", "latin-1", "cp1252", "iso-8859-1"]
+    all_captions = None
+
+    for encoding in encodings_to_try:
+        try:
+            with open(captions_file, "r", encoding=encoding) as f:
+                all_captions = json.load(f)
+            logger.info(f"Successfully loaded file with {encoding} encoding")
+            break
+        except UnicodeDecodeError as e:
+            logger.warning(f"Failed to load with {encoding} encoding: {e}")
+            continue
+        except json.JSONDecodeError as e:
+            logger.warning(f"JSON decode error with {encoding} encoding: {e}")
+            continue
+
+    if all_captions is None:
+        # Last resort: load with error handling
+        try:
+            with open(captions_file, "r", encoding="utf-8", errors="replace") as f:
+                all_captions = json.load(f)
+            logger.warning(
+                "Loaded file with UTF-8 and error replacement - some characters may be corrupted"
+            )
+        except Exception as e:
+            raise RuntimeError(f"Could not load {captions_file} with any encoding: {e}")
+
+    logger.info(f"Loaded {len(all_captions)} caption entries")
+
+    # Create a mapping from image_path to caption data
+    caption_lookup = {}
+    for caption_entry in all_captions:
+        if "image_path" in caption_entry:
+            caption_lookup[caption_entry["image_path"]] = caption_entry
+
+    logger.info(f"Created caption lookup for {len(caption_lookup)} images")
+
+    # Load split files and match with captions
     splits = {}
     for split_name in ["train", "val", "test"]:
         split_file = f"{split_name}.txt"
-        captions_file = f"{split_name}_captions.txt"
 
         if not os.path.exists(split_file):
             raise FileNotFoundError(f"Split file {split_file} not found!")
-        if not os.path.exists(captions_file):
-            raise FileNotFoundError(f"Caption file {captions_file} not found!")
 
-        # Load image paths
-        with open(split_file, "r", encoding="utf-8") as f:
-            image_paths = [line.strip() for line in f if line.strip()]
+        # Load image paths for this split with encoding handling
+        image_paths = []
+        try:
+            with open(split_file, "r", encoding="utf-8") as f:
+                image_paths = [line.strip() for line in f if line.strip()]
+        except UnicodeDecodeError:
+            # Try alternative encoding for split files too
+            with open(split_file, "r", encoding="utf-8", errors="replace") as f:
+                image_paths = [line.strip() for line in f if line.strip()]
+            logger.warning(f"Loaded {split_file} with error replacement")
 
-        # Load captions (one per line)
-        with open(captions_file, "r", encoding="utf-8") as f:
-            captions_list = [line.strip() for line in f if line.strip()]
+        # Match images with captions and format them
+        image_caption_pairs = []
+        missing_captions = []
 
-        if len(image_paths) != len(captions_list):
-            raise ValueError(
-                f"Mismatch in {split_name}: {len(image_paths)} images vs {len(captions_list)} captions"
+        for image_path in image_paths:
+            caption_data = find_matching_caption(
+                image_path, caption_lookup, all_captions
             )
+            if caption_data:
+                formatted_caption = format_caption(caption_data)
+                if formatted_caption.strip():
+                    image_caption_pairs.append((image_path, formatted_caption))
+                else:
+                    missing_captions.append(f"Empty caption for {image_path}")
+            else:
+                missing_captions.append(f"No caption found for {image_path}")
 
-        splits[split_name] = list(zip(image_paths, captions_list))
+        if missing_captions:
+            logger.warning(
+                f"Missing captions in {split_name} split: {len(missing_captions)}"
+            )
+            for missing in missing_captions[:5]:  # Log first 5 examples
+                logger.warning(f"  {missing}")
+            if len(missing_captions) > 5:
+                logger.warning(f"  ... and {len(missing_captions) - 5} more")
+
+        splits[split_name] = image_caption_pairs
         logger.info(
             f"Loaded {len(splits[split_name])} image-caption pairs for {split_name} split"
         )
@@ -130,9 +368,9 @@ def copy_images_and_create_captions(splits_with_captions, base_path):
 
             # image_path is a full path like:
             # "generated_images/watermark_folder/gdrive_*/filename.png"
-            source_path = Path(image_path)
+            source_path = find_actual_image_file(image_path)
 
-            if not source_path.exists():
+            if source_path is None:
                 missing_images.append(image_path)
                 logger.warning(f"Image not found: {image_path}")
                 continue

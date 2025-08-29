@@ -24,9 +24,35 @@ def main():
         # Initialize the captioner
         captioner = ControlledVocabularyCaptioner()
 
-        # Configuration
+        # Configuration - ask user for batch size
         root_dir = "generated_images"
-        max_images = 10000  # Set high to process all available images
+
+        print("\nBatch size options:")
+        print("  1. Small test (10 images)")
+        print("  2. Medium test (50 images)")
+        print("  3. Large test (100 images)")
+        print("  4. Full batch (all available images)")
+        print("  5. Custom number")
+
+        choice = input("\nSelect option (1-5): ").strip()
+
+        if choice == "1":
+            max_images = 10
+        elif choice == "2":
+            max_images = 50
+        elif choice == "3":
+            max_images = 100
+        elif choice == "4":
+            max_images = 10000  # High number to get all
+        elif choice == "5":
+            try:
+                max_images = int(input("Enter number of images: "))
+            except ValueError:
+                print("Invalid number, using 50 as default")
+                max_images = 50
+        else:
+            print("Invalid choice, using 50 as default")
+            max_images = 50
 
         print(f"\nFinding images in {root_dir}...")
 
@@ -55,16 +81,21 @@ def main():
         print(f"\nStarting captioning process...")
         print(f"This will process {len(image_paths)} images...")
 
-        # Dynamic file naming based on image count
-        if max_images <= 10:
+        # Dynamic file naming based on actual image count processed
+        actual_count = len(image_paths)
+        if actual_count <= 10:
             output_file = "test_captions.json"
             analysis_file = "test_vocabulary_analysis.txt"
-            phase_name = "Test"
-        elif max_images <= 100:
-            output_file = "phase3_captions.json"
-            analysis_file = "phase3_vocabulary_analysis.txt"
-            phase_name = "Phase 3"
-        elif max_images <= 500:
+            phase_name = "Small Test"
+        elif actual_count <= 50:
+            output_file = "medium_test_captions.json"
+            analysis_file = "medium_test_vocabulary_analysis.txt"
+            phase_name = "Medium Test (50 images)"
+        elif actual_count <= 100:
+            output_file = "large_test_captions.json"
+            analysis_file = "large_test_vocabulary_analysis.txt"
+            phase_name = "Large Test (100 images)"
+        elif actual_count <= 500:
             output_file = "phase2_captions.json"
             analysis_file = "phase2_vocabulary_analysis.txt"
             phase_name = "Phase 2"
